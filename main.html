@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лендинг за 1 день | 15000₽</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter (Neo-grotesque) & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        swiss: {
+                            black: '#0A0A0A',
+                            white: '#FFFFFF',
+                            gray: '#E5E5E5',
+                            lightGray: '#F5F5F5',
+                            accent: '#0000FF', // Pure Digital Blue
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    letterSpacing: {
+                        tighter: '-0.04em',
+                        tight: '-0.02em',
+                        widest: '0.1em',
+                    },
+                    animation: {
+                        'marquee': 'marquee 20s linear infinite',
+                    },
+                    keyframes: {
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FFFFFF;
+            color: #0A0A0A;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection {
+            background-color: #0000FF;
+            color: #FFFFFF;
+        }
+
+        /* Minimalist Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #FFFFFF; border-left: 1px solid #E5E5E5; }
+        ::-webkit-scrollbar-thumb { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb:hover { background: #0000FF; }
+
+        .marquee-container {
+            display: flex;
+            width: 200%;
+        }
+
+        /* Strict focus rings */
+        input:focus {
+            outline: none;
+            border-color: #0000FF;
+            box-shadow: none;
+        }
+        
+        /* Grid system border hacks for perfect 1px lines */
+        .swiss-grid-container {
+            background-color: #0A0A0A;
+            gap: 1px;
+        }
+        .swiss-grid-item {
+            background-color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+
+        const SwissButton = ({ children, variant = 'primary', className = '', onClick }) => {
+            const styles = {
+                primary: 'bg-swiss-black text-swiss-white border border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent',
+                secondary: 'bg-transparent text-swiss-black border border-swiss-black hover:bg-swiss-black hover:text-swiss-white',
+            };
+
+            return (
+                <button 
+                    onClick={onClick}
+                    className={`
+                        ${styles[variant]} font-mono font-bold text-sm tracking-widest uppercase px-8 py-4 
+                        transition-colors duration-200 rounded-none flex items-center justify-center gap-3 ${className}
+                    `}
+                >
+                    {children}
+                    {variant === 'primary' && <span className="text-lg leading-none">→</span>}
+                </button>
+            );
+        };
+
+        const Modal = ({ isOpen, onClose, message }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-swiss-white/90 backdrop-blur-sm p-4">
+                    <div className="bg-swiss-white border-2 border-swiss-black p-8 max-w-md w-full relative">
+                        <div className="flex justify-between items-start mb-8">
+                            <h4 className="font-bold text-xl uppercase tracking-tight">Системное сообщение</h4>
+                            <button onClick={onClose} className="text-2xl hover:text-swiss-accent transition-colors">✕</button>
+                        </div>
+                        <p className="font-mono text-swiss-black mb-8 leading-relaxed">
+                            {message}
+                        </p>
+                        <SwissButton variant="primary" className="w-full" onClick={onClose}>
+                            ПОДТВЕРДИТЬ
+                        </SwissButton>
+                    </div>
+                </div>
+            );
+        };
+
+        const SwissCard = ({ title, content, number }) => {
+            return (
+                <div className="swiss-grid-item p-8 lg:p-12 flex flex-col h-full hover:bg-swiss-lightGray transition-colors duration-300">
+                    <div className="font-mono text-swiss-accent font-bold mb-6 text-sm tracking-widest">{number}</div>
+                    <h3 className="font-bold text-2xl lg:text-3xl mb-4 text-swiss-black leading-tight tracking-tight">{title}</h3>
+                    <p className="text-gray-600 leading-relaxed font-mono text-sm flex-grow">{content}</p>
+                </div>
+            );
+        };
+
+        const Marquee = ({ text }) => (
+            <div className="overflow-hidden py-4 border-y border-swiss-black bg-swiss-white relative z-10 flex">
+                <div className="marquee-container animate-marquee">
+                    {[...Array(10)].map((_, i) => (
+                        <span key={i} className="font-mono font-bold text-sm tracking-widest text-swiss-black mx-8 whitespace-nowrap uppercase">
+                            {text} <span className="mx-8 text-swiss-accent">/</span>
+                        </span>
+                    ))}
+                </div>
+            </div>
+        );
+
+
+        const Accordion = ({ question, answer, number }) => {
+            const [isOpen, setIsOpen] = useState(false);
+
+            return (
+                <div className="border-b border-swiss-black last:border-0 group">
+                    <button 
+                        className="w-full text-left py-8 flex justify-between items-start transition-colors hover:text-swiss-accent"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        <div className="flex gap-8">
+                            <span className="font-mono text-sm text-gray-400 mt-1">{number}</span>
+                            <span className="font-bold text-xl md:text-2xl tracking-tight pr-8">{question}</span>
+                        </div>
+                        <div className="font-mono text-2xl leading-none">
+                            {isOpen ? '−' : '+'}
+                        </div>
+                    </button>
+                    <div 
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100 pb-8' : 'max-h-0 opacity-0'}`}
+                    >
+                        <p className="font-mono text-sm text-gray-600 leading-relaxed pl-14 pr-8 md:pr-16">
+                            {answer}
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+
+        const Hero = () => (
+            <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-4 border-b border-swiss-black flex items-center">
+                <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+                    <div className="lg:col-span-7">
+                        <div className="inline-flex items-center gap-3 border border-swiss-black px-4 py-2 mb-12">
+                            <span className="w-2 h-2 bg-swiss-accent"></span>
+                            <span className="font-mono text-xs font-bold tracking-widest uppercase text-swiss-black">БЕЗ ПРЕДОПЛАТЫ ЗА ВОЗДУХ</span>
+                        </div>
+                        <h1 className="font-black text-6xl md:text-8xl lg:text-[7.5rem] leading-[0.9] mb-8 text-swiss-black tracking-tighter uppercase">
+                            Лендинг <br/>
+                            за <span className="text-swiss-accent">1</span> день.
+                        </h1>
+                        <p className="font-mono text-base md:text-lg mb-12 text-gray-600 max-w-lg leading-relaxed">
+                            Всего 15 000 ₽. Готовый сайт завтра. Сохраняю 100% качества, убираю 100% бюрократии.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <SwissButton variant="primary" onClick={() => document.getElementById('order').scrollIntoView({behavior: 'smooth'})}>
+                                ЗАКАЗАТЬ ЗА 15К
+                            </SwissButton>
+                            <SwissButton variant="secondary" onClick={() => document.getElementById('faq').scrollIntoView({behavior: 'smooth'})}>
+                                УЗНАТЬ БОЛЬШЕ
+                            </SwissButton>
+                        </div>
+                    </div>
+                    
+                    <div className="hidden lg:block lg:col-span-5 relative">
+                        {/* Strict tabular representation of technical data (Swiss Style Code Block) */}
+                        <div className="border border-swiss-black p-8 bg-swiss-lightGray h-full">
+                            <div className="border-b border-swiss-black pb-4 mb-6 flex justify-between font-mono text-xs text-gray-500 uppercase tracking-widest">
+                                <span>Project.init()</span>
+                                <span>Status: Running</span>
+                            </div>
+                            <div className="font-mono text-sm leading-loose text-swiss-black">
+                                <div className="text-gray-400 mb-4">// Инициализация проекта</div>
+                                <div className="flex justify-between border-b border-gray-300 py-1">
+                                    <span>Framework</span><span className="font-bold">React.js</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-300 py-1">
+                                    <span>Styling</span><span className="font-bold">Tailwind CSS</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-300 py-1">
+                                    <span>Deadline</span><span className="text-swiss-accent font-bold">24h</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-300 py-1">
+                                    <span>Quality</span><span className="font-bold">100%</span>
+                                </div>
+                                <div className="mt-8 text-gray-400">// Запуск сборки...</div>
+                                <div className="mt-2 text-swiss-black flex items-center gap-2">
+                                    <span>[OK] Сборка завершена (0.01s)</span>
+                                </div>
+                                <div className="mt-4 flex items-center gap-2">
+                                    <span className="text-swiss-accent">root@landing:~$</span>
+                                    <span className="w-2 h-4 bg-swiss-black animate-pulse"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+
+        const Benefits = () => {
+            return (
+                <section className="border-b border-swiss-black bg-swiss-lightGray">
+                    <div className="border-b border-swiss-black px-4 py-16 md:py-24">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8">
+                            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9] max-w-2xl">Почему так<br/><span className="text-swiss-accent">быстро?</span></h2>
+                            <p className="font-mono text-sm text-gray-600 max-w-sm leading-relaxed">
+                                Я убрал все лишнее из процесса разработки, оставив только то, что дает реальный результат.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Perfect Grid lines using gap and bg-color trick */}
+                    <div className="swiss-grid-container grid grid-cols-1 md:grid-cols-3 border-b border-swiss-black">
+                        <SwissCard 
+                            number="01."
+                            title="Готовые фреймворки" 
+                            content="Использую проверенные UI-киты и React-компоненты. Не трачу время на изобретение велосипеда, а собираю рабочий болид."
+                        />
+                        <SwissCard 
+                            number="02."
+                            title="Никаких созвонов на 3 часа" 
+                            content="Четкий бриф на 10 минут. Вы заполняете, я ухожу в работу. Без лишней воды и согласований промежуточных кнопок."
+                        />
+                        <SwissCard 
+                            number="03."
+                            title="Сфокусированность" 
+                            content="Беру 1 проект на 1 день. Все мое внимание, ресурсы и код принадлежат только вашему бизнесу на эти 24 часа."
+                        />
+                    </div>
+                </section>
+            );
+        };
+
+
+        const Process = () => (
+            <section className="bg-swiss-white border-b border-swiss-black">
+                <div className="grid grid-cols-1 lg:grid-cols-12 max-w-7xl mx-auto">
+                    <div className="lg:col-span-4 p-8 lg:p-16 border-b lg:border-b-0 lg:border-r border-swiss-black bg-swiss-lightGray">
+                        <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-6 leading-none">
+                            Воронка<br/>работы
+                        </h2>
+                        <p className="font-mono text-sm text-gray-600 leading-relaxed">Прозрачный процесс от идеи до запуска за 24 часа.</p>
+                    </div>
+                    
+                    <div className="lg:col-span-8 flex flex-col">
+                        {[
+                            { time: "09:00", title: "Заявка и Оплата", desc: "Вы оставляете заявку, заполняете жесткий бриф и вносите предоплату 50%." },
+                            { time: "10:00", title: "Дизайн концепт", desc: "Собираю структуру блоков, пишу продающие заголовки, подбираю визуал." },
+                            { time: "14:00", title: "Код и Верстка", desc: "React, Tailwind, анимации. Чистый код, который летает и проходит PageSpeed." },
+                            { time: "20:00", title: "Релиз", desc: "Публикация на вашем домене, подключение форм, финальная оплата 50%." }
+                        ].map((step, idx) => (
+                            <div key={idx} className="flex flex-col md:flex-row border-b border-swiss-black last:border-b-0 group hover:bg-swiss-lightGray transition-colors">
+                                <div className="p-8 md:w-48 shrink-0 border-b md:border-b-0 md:border-r border-swiss-black flex items-center">
+                                    <span className="font-mono font-bold text-xl md:text-2xl tracking-widest text-swiss-accent">{step.time}</span>
+                                </div>
+                                <div className="p-8 flex-1">
+                                    <h3 className="font-bold text-2xl mb-2 text-swiss-black tracking-tight">{step.title}</h3>
+                                    <p className="font-mono text-sm text-gray-600 leading-relaxed max-w-lg">{step.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+
+        const Pricing = () => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setIsModalOpen(true);
+            };
+
+            return (
+                <section className="border-b border-swiss-black bg-swiss-white" id="order">
+                    <div className="grid grid-cols-1 lg:grid-cols-2">
+                        {/* Left Side: Pricing details */}
+                        <div className="p-8 md:p-16 lg:p-24 border-b lg:border-b-0 lg:border-r border-swiss-black flex flex-col justify-center">
+                            <div className="inline-block border border-swiss-black px-3 py-1 mb-12 self-start font-mono text-xs uppercase tracking-widest">
+                                Хит сезона
+                            </div>
+                            
+                            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-4 leading-none text-swiss-black">ОДИН ТАРИФ.</h2>
+                            <h3 className="text-2xl text-gray-500 mb-12 tracking-tight">Лендинг "Под ключ"</h3>
+                            
+                            <div className="text-7xl md:text-8xl lg:text-9xl font-black text-swiss-black tracking-tighter mb-12">
+                                15K ₽
+                            </div>
+                            
+                            <ul className="text-left font-mono text-sm text-swiss-black space-y-4 border-t border-swiss-black pt-8">
+                                {[
+                                    "Индивидуальный дизайн",
+                                    "Верстка React + Tailwind",
+                                    "Подключение заявок (Telegram/Почта)",
+                                    "Базовая SEO оптимизация",
+                                    "Срок: ровно 24 часа"
+                                ].map((item, i) => (
+                                    <li key={i} className="flex items-start gap-4">
+                                        <span className="text-swiss-accent text-lg leading-none mt-[-2px]">✓</span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Right Side: Form */}
+                        <div className="p-8 md:p-16 lg:p-24 bg-swiss-lightGray flex flex-col justify-center">
+                            <h4 className="font-black text-3xl md:text-5xl tracking-tighter uppercase mb-4">Готовы начать?</h4>
+                            <p className="font-mono text-sm text-gray-600 mb-12">Прозрачное ценообразование без скрытых платежей. Оставьте заявку.</p>
+                            
+                            <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
+                                <div className="relative group">
+                                    <label className="block font-mono text-xs uppercase tracking-widest text-swiss-black mb-2">Ваш Telegram</label>
+                                    <input type="text" placeholder="@username" required
+                                        className="w-full bg-transparent border-b-2 border-swiss-black py-4 font-mono text-lg text-swiss-black placeholder-gray-400 focus:border-swiss-accent transition-colors rounded-none" />
+                                </div>
+                                <div className="font-mono text-xs text-gray-500 flex items-center gap-2 mt-[-10px]">
+                                    <span className="w-1.5 h-1.5 bg-swiss-accent inline-block"></span>
+                                    Безопасная передача данных
+                                </div>
+                                <SwissButton variant="primary" className="w-full mt-4">
+                                    ЖМИТЕ СЮДА
+                                </SwissButton>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <Modal 
+                        isOpen={isModalOpen} 
+                        onClose={() => setIsModalOpen(false)} 
+                        message="Заявка успешно отправлена! Я свяжусь с вами в ближайшее время." 
+                    />
+                </section>
+            );
+        };
+
+
+        const FAQ = () => (
+            <section className="border-b border-swiss-black bg-swiss-white" id="faq">
+                <div className="max-w-4xl mx-auto px-4 py-24 border-x border-swiss-black min-h-[50vh]">
+                    <div className="mb-16">
+                        <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">
+                            Вопросы.
+                        </h2>
+                    </div>
+                    
+                    <div className="border-t border-swiss-black">
+                        <Accordion 
+                            number="01/"
+                            question="Почему так дешево за день работы?"
+                            answer="Потому что я автоматизировал 80% рутины. У меня есть собственные наработки, компоненты и скрипты сборки. Вы платите за результат и мой 5-летний опыт, а не за часы, проведенные в поисках нужной кнопки в Figma."
+                        />
+                        <Accordion 
+                            number="02/"
+                            question="А если мне не понравится дизайн?"
+                            answer="Мы утверждаем концепт в первые 5 часов работы. Вы видите, куда идет дизайн. В стоимость входят 2 итерации правок. Жесткий стиль и прямая коммуникация исключают недопонимания."
+                        />
+                        <Accordion 
+                            number="03/"
+                            question="Что нужно от меня для старта?"
+                            answer="Тексты (или понимание продукта), логотип (если есть), референсы того, что нравится, и предоплата 50%. Дальше я все сделаю сам."
+                        />
+                        <Accordion 
+                            number="04/"
+                            question="На чем верстаете?"
+                            answer="React.js, Tailwind CSS, Vite. Никаких медленных конструкторов вроде Tilda или Wix. Вы получаете исходный код, который принадлежит только вам и загружается за миллисекунды."
+                        />
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="bg-swiss-black text-swiss-white px-4 py-12 md:py-24">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-gray-800 pb-12">
+                    <div>
+                        <div className="font-black text-4xl md:text-5xl tracking-tighter uppercase leading-none mb-4">
+                            LANDING<span className="text-swiss-accent">.</span>DAY
+                        </div>
+                        <p className="font-mono text-sm text-gray-500 max-w-xs">Сайт за 24 часа. Без компромиссов.</p>
+                    </div>
+                    <div className="flex flex-col md:items-end justify-end gap-4 font-mono text-sm uppercase tracking-widest">
+                        {['Telegram', 'GitHub', 'Behance'].map((link, i) => (
+                            <a key={i} href="#" className="hover:text-swiss-accent transition-colors flex items-center gap-2">
+                                {link} <span className="text-swiss-accent">↗</span>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto mt-8 flex flex-col md:flex-row justify-between items-start md:items-center font-mono text-xs text-gray-600 uppercase tracking-widest">
+                    <span>© 2026 SWISS DEV.</span>
+                    <span>15000₽ OR NOTHING.</span>
+                </div>
+            </footer>
+        );
+
+
+        const App = () => {
+            const [scrolled, setScrolled] = useState(false);
+            
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 20);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="antialiased flex flex-col min-h-screen">
+                    
+                    {/* Minimalist Navigation */}
+                    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-swiss-white border-b border-swiss-black py-4' : 'bg-transparent py-6'}`}>
+                        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+                            <div className="font-black text-2xl tracking-tighter uppercase text-swiss-black">
+                                LANDING<span className="text-swiss-accent">.</span>DAY
+                            </div>
+                            <button 
+                                onClick={() => document.getElementById('order').scrollIntoView({behavior: 'smooth'})}
+                                className="font-mono font-bold text-xs uppercase tracking-widest text-swiss-black hover:text-swiss-accent transition-colors hidden sm:block"
+                            >
+                                [ ЗАКАЗАТЬ ]
+                            </button>
+                        </div>
+                    </nav>
+
+                    <Hero />
+                    
+                    <Marquee text="15 000 ₽ / 1 ДЕНЬ / REACT / TAILWIND" />
+                    
+                    <Benefits />
+                    <Process />
+                    
+                    <Marquee text="БЕЗ КОНСТРУКТОРОВ / ТОЛЬКО ЧИСТЫЙ КОД / ВЫСОКАЯ КОНВЕРСИЯ" />
+                    
+                    <Pricing />
+                    <FAQ />
+                    
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
