@@ -100,6 +100,12 @@
     </style>
 </head>
 <body>
+    <!-- Hidden form for Netlify's build bots to parse -->
+    <form name="feedback" netlify hidden>
+        <input type="email" name="email" />
+        <textarea name="message"></textarea>
+    </form>
+
     <div id="root"></div>
 
     <script type="text/babel">
@@ -311,10 +317,8 @@
                         </button>
                         <div className="p-8">
                             <h2 className="font-black text-2xl tracking-tighter uppercase mb-6">Оставить идею</h2>
-                            <form action="https://formsubmit.co/3031545@gmail.com" method="POST" className="flex flex-col gap-4">
-                                <input type="hidden" name="_next" value={window.location.href} />
-                                <input type="hidden" name="_subject" value="Новая идея инструмента!" />
-                                <input type="hidden" name="_captcha" value="false" />
+                            <form name="feedback" method="POST" data-netlify="true" className="flex flex-col gap-4">
+                                <input type="hidden" name="form-name" value="feedback" />
                                 
                                 <div className="flex flex-col gap-1">
                                     <label className="font-mono text-xs font-bold tracking-widest uppercase">Email для связи</label>
