@@ -304,6 +304,33 @@
         );
 
         const FeedbackModal = ({ isOpen, onClose }) => {
+            const [status, setStatus] = useState('idle');
+
+            React.useEffect(() => {
+                if (!isOpen) {
+                    setTimeout(() => setStatus('idle'), 300);
+                }
+            }, [isOpen]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setStatus('submitting');
+                
+                const myForm = e.target;
+                const formData = new FormData(myForm);
+                
+                fetch("/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams(formData).toString()
+                })
+                .then(() => setStatus('success'))
+                .catch((error) => {
+                    console.error("Form submission error", error);
+                    setStatus('error');
+                });
+            };
+
             if (!isOpen) return null;
 
             return (
@@ -317,35 +344,51 @@
                         </button>
                         <div className="p-8">
                             <h2 className="font-black text-2xl tracking-tighter uppercase mb-6">Оставить идею</h2>
-                            <form name="feedback" method="POST" data-netlify="true" className="flex flex-col gap-4">
-                                <input type="hidden" name="form-name" value="feedback" />
-                                
-                                <div className="flex flex-col gap-1">
-                                    <label className="font-mono text-xs font-bold tracking-widest uppercase">Email для связи</label>
-                                    <input 
-                                        type="email" 
-                                        name="email" 
-                                        required 
-                                        className="border-b-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent"
-                                        placeholder="your@email.com"
-                                    />
+                            
+                            {status === 'success' ? (
+                                <div className="font-mono text-swiss-black border-2 border-swiss-black p-4 bg-swiss-lightGray">
+                                    <p className="text-xl font-bold mb-2">Отправлено!</p>
+                                    <p className="text-sm">Спасибо за вашу идею. Мы обязательно ее рассмотрим.</p>
                                 </div>
-                                
-                                <div className="flex flex-col gap-1">
-                                    <label className="font-mono text-xs font-bold tracking-widest uppercase">Ваша идея</label>
-                                    <textarea 
-                                        name="message" 
-                                        required 
-                                        rows="4"
-                                        className="border-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent resize-none"
-                                        placeholder="Опишите, какой инструмент вам нужен..."
-                                    ></textarea>
-                                </div>
-                                
-                                <button type="submit" className="bg-swiss-black text-swiss-white border border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent font-mono font-bold text-sm tracking-widest uppercase px-6 py-3 transition-colors duration-200 rounded-none w-full mt-4">
-                                    ОТПРАВИТЬ
-                                </button>
-                            </form>
+                            ) : (
+                                <form name="feedback" method="POST" data-netlify="true" onSubmit={handleSubmit} className="flex flex-col gap-4">
+                                    <input type="hidden" name="form-name" value="feedback" />
+                                    
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-mono text-xs font-bold tracking-widest uppercase">Email для связи</label>
+                                        <input 
+                                            type="email" 
+                                            name="email" 
+                                            required 
+                                            className="border-b-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent"
+                                            placeholder="your@email.com"
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-mono text-xs font-bold tracking-widest uppercase">Ваша идея</label>
+                                        <textarea 
+                                            name="message" 
+                                            required 
+                                            rows="4"
+                                            className="border-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent resize-none"
+                                            placeholder="Опишите, какой инструмент вам нужен..."
+                                        ></textarea>
+                                    </div>
+                                    
+                                    {status === 'error' && (
+                                        <p className="text-red-500 font-mono text-xs">Произошла ошибка при отправке. Попробуйте еще раз.</p>
+                                    )}
+                                    
+                                    <button 
+                                        type="submit" 
+                                        disabled={status === 'submitting'}
+                                        className="bg-swiss-black text-swiss-white border border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent font-mono font-bold text-sm tracking-widest uppercase px-6 py-3 transition-colors duration-200 rounded-none w-full mt-4 disabled:opacity-50"
+                                    >
+                                        {status === 'submitting' ? 'ОТПРАВКА...' : 'ОТПРАВИТЬ'}
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>
