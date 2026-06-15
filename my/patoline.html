@@ -455,8 +455,8 @@
                     </div>
 
                     {/* Canvas Area */}
-                    <div className="flex-1 bg-swiss-black relative" ref={containerRef}>
-                        <canvas ref={canvasRef} className="absolute inset-0 block"></canvas>
+                    <div className="flex-1 bg-swiss-black relative overflow-hidden" ref={containerRef}>
+                        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block"></canvas>
                     </div>
                 </div>
             );
