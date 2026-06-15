@@ -216,7 +216,7 @@
             </section>
         );
 
-        const ToolsGrid = () => {
+        const ToolsGrid = ({ onOpenFeedback }) => {
             const tools = [
                 {
                     title: "WB XLSX CSV Sanitizer",
@@ -270,11 +270,9 @@
                                 Не нашли подходящей утилиты? Расскажите о своей задаче, и мы добавим нужный инструмент в этот каталог.
                             </p>
                             <div className="mt-auto">
-                                <a href="mailto:idea@p.miroshnik.tools" className="block w-full">
-                                    <SwissButton variant="secondary" className="w-full text-center border-dashed border-2 hover:border-solid">
-                                        НАПИСАТЬ ИДЕЮ
-                                    </SwissButton>
-                                </a>
+                                <SwissButton variant="secondary" onClick={onOpenFeedback} className="w-full text-center border-dashed border-2 hover:border-solid">
+                                    НАПИСАТЬ ИДЕЮ
+                                </SwissButton>
                             </div>
                         </div>
                     </div>
@@ -299,8 +297,60 @@
             </footer>
         );
 
+        const FeedbackModal = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-swiss-white border-2 border-swiss-black swiss-shadow max-w-md w-full relative">
+                        <button 
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-2xl font-bold hover:text-swiss-accent transition-colors leading-none"
+                        >
+                            &times;
+                        </button>
+                        <div className="p-8">
+                            <h2 className="font-black text-2xl tracking-tighter uppercase mb-6">Оставить идею</h2>
+                            <form action="https://formsubmit.co/3031545@gmail.com" method="POST" className="flex flex-col gap-4">
+                                <input type="hidden" name="_next" value={window.location.href} />
+                                <input type="hidden" name="_subject" value="Новая идея инструмента!" />
+                                <input type="hidden" name="_captcha" value="false" />
+                                
+                                <div className="flex flex-col gap-1">
+                                    <label className="font-mono text-xs font-bold tracking-widest uppercase">Email для связи</label>
+                                    <input 
+                                        type="email" 
+                                        name="email" 
+                                        required 
+                                        className="border-b-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent"
+                                        placeholder="your@email.com"
+                                    />
+                                </div>
+                                
+                                <div className="flex flex-col gap-1">
+                                    <label className="font-mono text-xs font-bold tracking-widest uppercase">Ваша идея</label>
+                                    <textarea 
+                                        name="message" 
+                                        required 
+                                        rows="4"
+                                        className="border-2 border-swiss-black p-2 font-mono text-sm focus:outline-none focus:border-swiss-accent bg-transparent resize-none"
+                                        placeholder="Опишите, какой инструмент вам нужен..."
+                                    ></textarea>
+                                </div>
+                                
+                                <button type="submit" className="bg-swiss-black text-swiss-white border border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent font-mono font-bold text-sm tracking-widest uppercase px-6 py-3 transition-colors duration-200 rounded-none w-full mt-4">
+                                    ОТПРАВИТЬ
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const App = () => {
             const [scrolled, setScrolled] = useState(false);
+            const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
             
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -320,8 +370,10 @@
 
                     <Hero />
                     <Marquee text="БЫСТРЫЙ ДОСТУП / ЧИСТЫЙ КОД / РАБОЧИЕ ИНСТРУМЕНТЫ" />
-                    <ToolsGrid />
+                    <ToolsGrid onOpenFeedback={() => setIsFeedbackOpen(true)} />
                     <Footer />
+
+                    <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
                 </div>
             );
         };
