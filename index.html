@@ -101,7 +101,8 @@
 </head>
 <body>
     <!-- Hidden form for Netlify's build bots to parse -->
-    <form name="feedback" netlify hidden>
+    <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+        <input type="hidden" name="form-name" value="feedback" />
         <input type="email" name="email" />
         <textarea name="message"></textarea>
     </form>
