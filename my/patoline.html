@@ -177,12 +177,21 @@
             const syncCanvasSize = () => {
                 const canvas = canvasRef.current;
                 const container = containerRef.current;
-                if (!canvas || !container) return;
-                // Double check to only set if changed to prevent clearing accidentally
-                if (canvas.width !== container.clientWidth || canvas.height !== container.clientHeight) {
-                    canvas.width = container.clientWidth;
-                    canvas.height = container.clientHeight;
+                if (!canvas || !container) return false;
+                
+                const dpr = window.devicePixelRatio || 1;
+                const rect = container.getBoundingClientRect();
+                const physicalWidth = rect.width * dpr;
+                const physicalHeight = rect.height * dpr;
+                
+                if (canvas.width !== physicalWidth || canvas.height !== physicalHeight) {
+                    canvas.width = physicalWidth;
+                    canvas.height = physicalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.scale(dpr, dpr);
+                    return true;
                 }
+                return false;
             };
 
             const getPoint = (theta, p, width, height) => {
@@ -233,11 +242,16 @@
             const drawInstant = () => {
                 syncCanvasSize();
                 const canvas = canvasRef.current;
+                const container = containerRef.current;
                 const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
+                const logicalWidth = container.clientWidth;
+                const logicalHeight = container.clientHeight;
+                
+                ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+                
+                const cx = logicalWidth / 2;
+                const cy = logicalHeight / 2;
                 const currentParams = paramsRef.current;
                 const maxTheta = currentParams.revs * Math.PI * 2;
                 
@@ -247,12 +261,12 @@
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 
-                let prevPt = getPoint(0, currentParams, canvas.width, canvas.height);
+                let prevPt = getPoint(0, currentParams, logicalWidth, logicalHeight);
                 ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
 
                 for (let t = 0; t <= maxTheta; t += stepSize) {
-                    const pt = getPoint(t, currentParams, canvas.width, canvas.height);
-                    if (Math.abs(pt.x - prevPt.x) > canvas.width / 4 || Math.abs(pt.y - prevPt.y) > canvas.height / 4) {
+                    const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                    if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
                         ctx.moveTo(cx + pt.x, cy + pt.y);
                     } else {
                         ctx.lineTo(cx + pt.x, cy + pt.y);
@@ -265,11 +279,15 @@
 
             const animateDraw = () => {
                 const canvas = canvasRef.current;
-                if (!canvas) return;
+                const container = containerRef.current;
+                if (!canvas || !container) return;
                 const ctx = canvas.getContext('2d');
                 
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
+                const logicalWidth = container.clientWidth;
+                const logicalHeight = container.clientHeight;
+                
+                const cx = logicalWidth / 2;
+                const cy = logicalHeight / 2;
                 const currentParams = paramsRef.current;
                 const maxTheta = currentParams.revs * Math.PI * 2;
                 const drawSpeed = 2; 
@@ -280,14 +298,14 @@
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 
-                let prevPt = getPoint(drawProgress.current, currentParams, canvas.width, canvas.height);
+                let prevPt = getPoint(drawProgress.current, currentParams, logicalWidth, logicalHeight);
                 ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
 
                 const targetProgress = Math.min(drawProgress.current + drawSpeed, maxTheta);
                 
                 for (let t = drawProgress.current; t <= targetProgress; t += stepSize) {
-                    const pt = getPoint(t, currentParams, canvas.width, canvas.height);
-                    if (Math.abs(pt.x - prevPt.x) > canvas.width / 4 || Math.abs(pt.y - prevPt.y) > canvas.height / 4) {
+                    const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                    if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
                         ctx.moveTo(cx + pt.x, cy + pt.y);
                     } else {
                         ctx.lineTo(cx + pt.x, cy + pt.y);
@@ -311,10 +329,11 @@
                     drawProgress.current = 0;
                     
                     const canvas = canvasRef.current;
+                    const container = containerRef.current;
                     const ctx = canvas.getContext('2d');
                     
                     if (paramsRef.current.animate) {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.clearRect(0, 0, container.clientWidth, container.clientHeight);
                         animateDraw();
                     } else {
                         drawInstant();
@@ -335,10 +354,11 @@
                 syncCanvasSize();
                 
                 const canvas = canvasRef.current;
+                const container = containerRef.current;
                 const ctx = canvas.getContext('2d');
                 
                 if (params.animate) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.clearRect(0, 0, container.clientWidth, container.clientHeight);
                     animateDraw();
                 } else {
                     drawInstant();
