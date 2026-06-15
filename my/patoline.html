@@ -126,7 +126,6 @@
             const containerRef = useRef(null);
             const animationId = useRef(null);
             const drawProgress = useRef(0);
-            
             const [params, setParams] = useState({
                 type: 'hypotrochoid',
                 R: 300,
@@ -134,7 +133,12 @@
                 d: 200,
                 revs: 50,
                 thickness: 0.6,
-                color: '#FFFFFF',
+                color: '#000000',
+                bgColor: '#FFFFFF',
+                dist1: 0,
+                dist2: 0,
+                pressure: false,
+                pressureIntensity: 80,
                 animate: false
             });
 
@@ -143,7 +147,7 @@
                 paramsRef.current = params;
             }, [params]);
 
-            const stepSize = 0.05;
+            const stepSize = 0.01;
 
             const updateParam = (key, value) => {
                 setParams(prev => ({ ...prev, [key]: value }));
@@ -155,7 +159,8 @@
                     R: Math.floor(Math.random() * 290) + 10,
                     r: Math.floor(Math.random() * 150) + 1,
                     d: Math.floor(Math.random() * 200),
-                    color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+                    dist1: Math.floor(Math.random() * 50),
+                    dist2: Math.floor(Math.random() * 50)
                 }));
             };
 
@@ -172,6 +177,56 @@
                 link.download = `patoline-${Date.now()}.png`;
                 link.href = dataURL;
                 link.click();
+            };
+
+            const exportSVG = () => {
+                const container = containerRef.current;
+                if (!container) return;
+                
+                const logicalWidth = container.clientWidth;
+                const logicalHeight = container.clientHeight;
+                const cx = logicalWidth / 2;
+                const cy = logicalHeight / 2;
+                const currentParams = paramsRef.current;
+                const maxTheta = currentParams.revs * Math.PI * 2;
+                
+                let svgContent = "";
+                let pathData = "";
+                let prevPt = getPoint(0, currentParams, logicalWidth, logicalHeight);
+                pathData += `M ${cx + prevPt.x} ${cy + prevPt.y} `;
+
+                for (let t = stepSize; t <= maxTheta; t += stepSize) {
+                    const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                    if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
+                        pathData += `M ${cx + pt.x} ${cy + pt.y} `;
+                    } else {
+                        pathData += `L ${cx + pt.x} ${cy + pt.y} `;
+                        if (currentParams.pressure) {
+                            const dynamicWidth = currentParams.thickness * (1 + (currentParams.pressureIntensity / 100) * Math.sin(t));
+                            svgContent += `<line x1="${cx + prevPt.x}" y1="${cy + prevPt.y}" x2="${cx + pt.x}" y2="${cy + pt.y}" stroke="${currentParams.color}" stroke-width="${Math.max(0.01, dynamicWidth)}" stroke-linecap="round" />\n`;
+                        }
+                    }
+                    prevPt = pt;
+                }
+
+                if (!currentParams.pressure) {
+                    svgContent = `<path d="${pathData}" fill="none" stroke="${currentParams.color}" stroke-width="${currentParams.thickness}" stroke-linecap="round" stroke-linejoin="round" />`;
+                }
+
+                const svgString = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${logicalWidth}" height="${logicalHeight}" viewBox="0 0 ${logicalWidth} ${logicalHeight}">
+                        <rect width="100%" height="100%" fill="${currentParams.bgColor}" />
+                        ${svgContent}
+                    </svg>
+                `;
+
+                const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `patoline-${Date.now()}.svg`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
             };
 
             const syncCanvasSize = () => {
@@ -199,22 +254,61 @@
                 let x, y;
 
                 if (type === 'hypotrochoid') {
-                    x = (R - r) * Math.cos(theta) + d * Math.cos(((R - r) / r) * theta);
-                    y = (R - r) * Math.sin(theta) - d * Math.sin(((R - r) / r) * theta);
+                    const lobeFreq = p.dist1 || 0; 
+                    const lobeAmp = p.dist2 || 0; 
+                    const R_eff = R + Math.sin(theta * lobeFreq) * lobeAmp;
+                    
+                    x = (R_eff - r) * Math.cos(theta) + d * Math.cos(((R - r) / r) * theta);
+                    y = (R_eff - r) * Math.sin(theta) - d * Math.sin(((R - r) / r) * theta);
                 } else if (type === 'epitrochoid') {
-                    x = (R + r) * Math.cos(theta) - d * Math.cos(((R + r) / r) * theta);
-                    y = (R + r) * Math.sin(theta) - d * Math.sin(((R + r) / r) * theta);
+                    const lobeFreq = p.dist1 || 0; 
+                    const lobeAmp = p.dist2 || 0; 
+                    const R_eff = R + Math.sin(theta * lobeFreq) * lobeAmp;
+                    
+                    x = (R_eff + r) * Math.cos(theta) - d * Math.cos(((R + r) / r) * theta);
+                    y = (R_eff + r) * Math.sin(theta) - d * Math.sin(((R + r) / r) * theta);
                 } else if (type === 'linear') {
                     const maxT = revs * Math.PI * 2;
                     const totalWidth = width * 0.9;
                     const startX = -totalWidth / 2;
                     const progress = maxT > 0 ? theta / maxT : 0;
                     
-                    const x_center = startX + progress * totalWidth;
-                    const waveY = Math.sin(progress * Math.PI * 2 * (R / 50)) * r;
+                    const dist1 = p.dist1 || 0;
+                    const dist2 = p.dist2 || 0;
                     
-                    x = x_center - d * Math.sin(theta);
+                    const x_center = startX + progress * totalWidth;
+                    const waveX = Math.sin(progress * Math.PI * 2 * (dist1 / 5)) * (dist1 * 2);
+                    const rippleY = Math.sin(progress * Math.PI * 2 * dist2) * dist2;
+                    
+                    const waveY = Math.sin(progress * Math.PI * 2 * (R / 50)) * r + rippleY;
+                    
+                    x = x_center - d * Math.sin(theta) + waveX;
                     y = waveY - d * Math.cos(theta);
+                } else if (type === 'sine_ribbon') {
+                    const maxT = revs * Math.PI * 2;
+                    const totalWidth = width * 1.5; 
+                    const startX = -totalWidth / 2;
+                    const progress = maxT > 0 ? theta / maxT : 0;
+                    
+                    const macroFreq = Math.max(0.1, (p.dist1 / 100) * 5); 
+                    const macroAmp = R;
+                    const macroPhase = progress * Math.PI * 2 * macroFreq;
+                    
+                    const x_base = startX + progress * totalWidth;
+                    const y_base = Math.sin(macroPhase) * macroAmp;
+                    
+                    const dx = totalWidth; 
+                    const dy = macroAmp * Math.PI * 2 * macroFreq * Math.cos(macroPhase);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    const localFreq = Math.max(0.1, (p.dist2 / 100) * 50);
+                    const localPhase = progress * Math.PI * 2 * localFreq;
+                    
+                    const x_local = - d * Math.sin(theta);
+                    const y_local = - d * Math.cos(theta) + r * Math.sin(localPhase);
+                    
+                    x = x_base + x_local * Math.cos(angle) - y_local * Math.sin(angle);
+                    y = y_base + x_local * Math.sin(angle) + y_local * Math.cos(angle);
                 } else if (type === 'sine_guilloche') {
                     const totalLines = Math.max(1, Math.floor(revs));
                     const lineIndex = Math.floor(theta / (Math.PI * 2));
@@ -255,26 +349,42 @@
                 const currentParams = paramsRef.current;
                 const maxTheta = currentParams.revs * Math.PI * 2;
                 
-                ctx.beginPath();
                 ctx.strokeStyle = currentParams.color;
-                ctx.lineWidth = currentParams.thickness;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 
                 let prevPt = getPoint(0, currentParams, logicalWidth, logicalHeight);
-                ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
 
-                for (let t = 0; t <= maxTheta; t += stepSize) {
-                    const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
-                    if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
-                        ctx.moveTo(cx + pt.x, cy + pt.y);
-                    } else {
-                        ctx.lineTo(cx + pt.x, cy + pt.y);
+                if (currentParams.pressure) {
+                    for (let t = stepSize; t <= maxTheta; t += stepSize) {
+                        const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                        if (Math.abs(pt.x - prevPt.x) <= logicalWidth / 4 && Math.abs(pt.y - prevPt.y) <= logicalHeight / 4) {
+                            ctx.beginPath();
+                            ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
+                            ctx.lineTo(cx + pt.x, cy + pt.y);
+                            const dynamicWidth = currentParams.thickness * (1 + (currentParams.pressureIntensity / 100) * Math.sin(t));
+                            ctx.lineWidth = Math.max(0.01, dynamicWidth);
+                            ctx.stroke();
+                        }
+                        prevPt = pt;
                     }
-                    prevPt = pt;
-                }
+                } else {
+                    ctx.beginPath();
+                    ctx.lineWidth = currentParams.thickness;
+                    ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
 
-                ctx.stroke();
+                    for (let t = stepSize; t <= maxTheta; t += stepSize) {
+                        const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                        if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
+                            ctx.moveTo(cx + pt.x, cy + pt.y);
+                        } else {
+                            ctx.lineTo(cx + pt.x, cy + pt.y);
+                        }
+                        prevPt = pt;
+                    }
+
+                    ctx.stroke();
+                }
             };
 
             const animateDraw = () => {
@@ -292,28 +402,44 @@
                 const maxTheta = currentParams.revs * Math.PI * 2;
                 const drawSpeed = 2; 
                 
-                ctx.beginPath();
                 ctx.strokeStyle = currentParams.color;
-                ctx.lineWidth = currentParams.thickness;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 
                 let prevPt = getPoint(drawProgress.current, currentParams, logicalWidth, logicalHeight);
-                ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
-
                 const targetProgress = Math.min(drawProgress.current + drawSpeed, maxTheta);
                 
-                for (let t = drawProgress.current; t <= targetProgress; t += stepSize) {
-                    const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
-                    if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
-                        ctx.moveTo(cx + pt.x, cy + pt.y);
-                    } else {
-                        ctx.lineTo(cx + pt.x, cy + pt.y);
+                if (currentParams.pressure) {
+                    for (let t = drawProgress.current + stepSize; t <= targetProgress; t += stepSize) {
+                        const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                        if (Math.abs(pt.x - prevPt.x) <= logicalWidth / 4 && Math.abs(pt.y - prevPt.y) <= logicalHeight / 4) {
+                            ctx.beginPath();
+                            ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
+                            ctx.lineTo(cx + pt.x, cy + pt.y);
+                            const dynamicWidth = currentParams.thickness * (1 + (currentParams.pressureIntensity / 100) * Math.sin(t));
+                            ctx.lineWidth = Math.max(0.01, dynamicWidth);
+                            ctx.stroke();
+                        }
+                        prevPt = pt;
                     }
-                    prevPt = pt;
-                }
+                } else {
+                    ctx.beginPath();
+                    ctx.lineWidth = currentParams.thickness;
+                    ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
 
-                ctx.stroke();
+                    for (let t = drawProgress.current + stepSize; t <= targetProgress; t += stepSize) {
+                        const pt = getPoint(t, currentParams, logicalWidth, logicalHeight);
+                        if (Math.abs(pt.x - prevPt.x) > logicalWidth / 4 || Math.abs(pt.y - prevPt.y) > logicalHeight / 4) {
+                            ctx.moveTo(cx + pt.x, cy + pt.y);
+                        } else {
+                            ctx.lineTo(cx + pt.x, cy + pt.y);
+                        }
+                        prevPt = pt;
+                    }
+
+                    ctx.stroke();
+                }
+                
                 drawProgress.current = targetProgress;
 
                 if (drawProgress.current < maxTheta) {
@@ -385,6 +511,7 @@
                                     <option value="hypotrochoid">Hypotrochoid (Inner)</option>
                                     <option value="epitrochoid">Epitrochoid (Outer)</option>
                                     <option value="linear">Linear Ribbon</option>
+                                    <option value="sine_ribbon">Curved Ribbon</option>
                                     <option value="sine_guilloche">Sine Guilloche</option>
                                 </select>
                             </div>
@@ -437,6 +564,62 @@
                                 </div>
                             </div>
 
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest">Background Color</label>
+                                <div className="flex gap-2">
+                                    <input type="color" value={params.bgColor} onChange={(e) => updateParam('bgColor', e.target.value)} className="w-10 h-8 p-0 border-0" />
+                                    <input type="text" value={params.bgColor} onChange={(e) => updateParam('bgColor', e.target.value)} className="swiss-border-b font-mono text-sm w-full uppercase focus:outline-none focus:border-swiss-accent bg-transparent px-1" />
+                                </div>
+                            </div>
+
+                            {params.type !== 'sine_guilloche' && (
+                                <>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                            <span>
+                                                {params.type === 'sine_ribbon' ? 'Macro Wave Freq' : 
+                                                 (params.type === 'hypotrochoid' || params.type === 'epitrochoid') ? 'Radial Lobe Freq' :
+                                                 'Wave X (Distortion)'}
+                                            </span>
+                                            <span className="text-swiss-accent">{params.dist1}</span>
+                                        </label>
+                                        <input type="range" min="0" max="100" value={params.dist1} onChange={(e) => updateParam('dist1', parseFloat(e.target.value))} />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                            <span>
+                                                {params.type === 'sine_ribbon' ? 'Local Wave Freq' : 
+                                                 (params.type === 'hypotrochoid' || params.type === 'epitrochoid') ? 'Radial Lobe Amp' :
+                                                 'Ripple Y (Distortion)'}
+                                            </span>
+                                            <span className="text-swiss-accent">{params.dist2}</span>
+                                        </label>
+                                        <input type="range" min="0" max="100" value={params.dist2} onChange={(e) => updateParam('dist2', parseFloat(e.target.value))} />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={params.pressure} 
+                                        onChange={(e) => updateParam('pressure', e.target.checked)}
+                                        className="w-4 h-4 accent-swiss-accent cursor-pointer"
+                                    />
+                                    <span className="font-mono text-xs font-bold uppercase tracking-widest">3D Pen Pressure</span>
+                                </label>
+                                {params.pressure && (
+                                    <div className="flex flex-col gap-1 pl-6">
+                                        <label className="font-mono text-[10px] font-bold uppercase tracking-widest flex justify-between text-gray-500">
+                                            <span>Intensity</span>
+                                            <span>{params.pressureIntensity}%</span>
+                                        </label>
+                                        <input type="range" min="0" max="200" value={params.pressureIntensity} onChange={(e) => updateParam('pressureIntensity', parseFloat(e.target.value))} />
+                                    </div>
+                                )}
+                            </div>
+
                             <label className="flex items-center gap-2 cursor-pointer mt-2">
                                 <input 
                                     type="checkbox" 
@@ -448,14 +631,17 @@
                             </label>
                         </div>
 
-                        <div className="flex gap-2 mt-auto pt-6 border-t-2 border-swiss-black">
-                            <SwissButton variant="secondary" onClick={randomize} className="w-full text-center">Random</SwissButton>
-                            <SwissButton variant="primary" onClick={exportPNG} className="w-full text-center">Export PNG</SwissButton>
+                        <div className="flex flex-col gap-2 mt-auto pt-6 border-t-2 border-swiss-black">
+                            <SwissButton variant="secondary" onClick={randomize} className="w-full text-center">Randomize Geometry</SwissButton>
+                            <div className="flex gap-2">
+                                <SwissButton variant="primary" onClick={exportPNG} className="w-full text-center">PNG</SwissButton>
+                                <SwissButton variant="primary" onClick={exportSVG} className="w-full text-center">SVG</SwissButton>
+                            </div>
                         </div>
                     </div>
 
                     {/* Canvas Area */}
-                    <div className="flex-1 bg-swiss-black relative overflow-hidden" ref={containerRef}>
+                    <div className="flex-1 relative overflow-hidden" ref={containerRef} style={{ backgroundColor: params.bgColor }}>
                         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block"></canvas>
                     </div>
                 </div>

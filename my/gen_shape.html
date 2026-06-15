@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenArt V10.2 - Alpha Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&family=Material+Icons&family=Material+Icons+Outlined&display=block" rel="stylesheet" />
+    <style>
+        :root {
+            /* Swiss Palette */
+            --bg-app: #F5F5F5;       
+            --bg-panel: #FFFFFF;     
+            --bg-input: #FFFFFF;     
+            --text-main: #0A0A0A;    
+            --text-muted: #666666;   
+            --accent: #0000FF;       
+            --accent-hover: #0A0A0A;
+            --border: #0A0A0A;
+            --radius: 0px;
+            --shadow: 4px 4px 0px 0px #0A0A0A;
+            --shadow-hover: 6px 6px 0px 0px #0A0A0A;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        /* --- SWISS NAV --- */
+        .swiss-nav {
+            background-color: #FFFFFF;
+            border-bottom: 2px solid #0A0A0A;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+        .swiss-nav-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: -1px;
+            color: #0A0A0A;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .swiss-nav-title:hover { color: #0000FF; }
+        .swiss-nav-title span { color: #0000FF; }
+        .swiss-nav-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #666666;
+            background: #F5F5F5;
+            padding: 4px 8px;
+            border: 2px solid #0A0A0A;
+        }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR CONTROLS --- */
+        .controls {
+            width: 340px;
+            background-color: var(--bg-panel);
+            border-right: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .controls-header {
+            padding: 20px 20px 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        h2 span { color: var(--accent); }
+
+        .scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Custom Scrollbar */
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-track { background: transparent; }
+        .scroll-area::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 3px; }
+
+        /* --- SECTIONS & GROUPS --- */
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .control-full {
+            grid-column: span 2;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        label span.val { color: var(--accent); font-feature-settings: "tnum"; }
+
+        /* --- UI ELEMENTS --- */
+        input[type="text"], select, textarea {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            font-family: 'Inter', monospace;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: #FFFFFF;
+        }
+
+        /* Upload Button Styled */
+        .upload-container {
+            position: relative;
+        }
+        .upload-btn {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 2px dashed var(--border);
+            padding: 12px;
+            width: 100%;
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .upload-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 2px;
+            outline: none;
+            margin: 10px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Toggles */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+        .toggle-row label { margin: 0; cursor: pointer; color: var(--text-main); }
+        .toggle-row input { width: auto; height: auto; accent-color: var(--accent); }
+
+        /* Color Input Wrapper */
+        .color-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            padding: 6px;
+            border-radius: var(--radius);
+            justify-content: space-between;
+        }
+        
+        .color-left { display: flex; align-items: center; gap: 8px; width: 100%; }
+        
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Footer / Actions */
+        .controls-footer {
+            padding: 20px;
+            border-top: 2px solid var(--border);
+            background: var(--bg-panel);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary, .btn-secondary {
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+            font-size: 11px;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent);
+            color: #FFFFFF;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        .btn-primary:hover { 
+            background-color: var(--accent-hover); 
+            box-shadow: var(--shadow-hover);
+            transform: translate(-2px, -2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        .btn-secondary:hover {
+            background-color: #E5E5E5;
+            box-shadow: var(--shadow-hover);
+            transform: translate(-2px, -2px);
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Small action button for Random / Shuffle */
+        .btn-mini {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-mini:hover { background: rgba(56, 189, 248, 0.1); }
+
+
+        /* --- PREVIEW AREA --- */
+        .preview-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #E5E5E5;
+            /* Checkered pattern for transparency visualization */
+            background-image:
+                linear-gradient(45deg, #D4D4D4 25%, transparent 25%),
+                linear-gradient(-45deg, #D4D4D4 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #D4D4D4 75%),
+                linear-gradient(-45deg, transparent 75%, #D4D4D4 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            border: 2px solid #0A0A0A;
+            box-shadow: 10px 10px 0px 0px #0A0A0A;
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .stats-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hint { font-size: 10px; color: var(--text-muted); margin-top: 4px; opacity: 0.7; }
+        .hidden { display: none; }
+        
+        /* Font fix for UI */
+        .material-icons-outlined, .material-icons {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="swiss-nav">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="../index.html" class="swiss-nav-title">
+                P.MIROSHNIK<span>.TOOLS</span>
+            </a>
+            <span class="swiss-nav-badge">/ gen-shape</span>
+        </div>
+    </nav>
+
+    <div class="app-container">
+
+    <div class="controls">
+        <div class="controls-header">
+            <h2><span class="material-icons-outlined">grid_4x4</span> GenArt <span>V10.2</span></h2>
+        </div>
+        
+        <div class="scroll-area">
+            
+            <div class="control-section">
+                <div class="section-title">1. Источник (Source)</div>
+                <div class="upload-container">
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <span class="material-icons-outlined">upload_file</span> Загрузить изображение
+                    </button>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">2. Сетка (Grid)</div>
+                <div class="control-grid">
+                    <div class="input-group">
+                        <label>Плотность <span class="val" id="resVal">60</span></label>
+                        <input type="range" id="resolution" min="10" max="150" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Размер (px) <span class="val" id="scaleVal">16</span></label>
+                        <input type="range" id="scale" min="10" max="300" step="10" value="50">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">3. Объект (Object)</div>
+                <div class="input-group" style="margin-bottom: 12px;">
+                    <select id="shapeType">
+                        <option value="icons">✦ Иконки (Google Icons)</option>
+                        <option value="circles">● Круги (Halftone)</option>
+                        <option value="squares">■ Квадраты (Pixel)</option>
+                        <option value="triangle">▲ Треугольник (Poly)</option>
+                        <option value="hexagon">⬡ Гексагон (Honey)</option>
+                        <option value="cross">✚ Крест (Plus)</option>
+                        <option value="star">★ Звезда (Star)</option>
+                        <option value="heart">♥ Сердце (Love)</option>
+                        <option value="lines">/// Линии (Field)</option>
+                        <option value="chars">Aa Символы (Matrix)</option>
+                    </select>
+                </div>
+
+                <div class="input-group control-full" id="iconGroup">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Набор иконок</label>
+                        <button class="btn-mini" onclick="randomizeIcons()" title="Вставить случайные иконки">
+                            <span class="material-icons-outlined" style="font-size: 14px;">shuffle</span> Случайно
+                        </button>
+                    </div>
+                    <textarea id="iconInput" rows="2" placeholder="favorite star bolt...">favorite star bolt diamond token rocket face</textarea>
+                    <div class="hint">Названия с fonts.google.com/icons</div>
+                </div>
+
+                <div class="input-group control-full hidden" id="charGroup">
+                    <label>Символы</label>
+                    <input type="text" id="charInput" value="01">
+                </div>
+
+                <div class="control-grid" style="margin-top: 10px;">
+                    <div class="input-group">
+                        <label>Масштаб <span class="val" id="objScaleVal">0</span></label>
+                        <input type="range" id="objScale" min="-1.0" max="1.5" step="0.1" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Поворот <span class="val" id="rotVal">0°</span></label>
+                        <input type="range" id="rotation" min="0" max="360" step="45" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">4. Физика и Стиль (Physics)</div>
+                <div class="control-grid">
+                    <div class="input-group">
+                        <label>Хаос <span class="val" id="chaosVal">0.0</span></label>
+                        <input type="range" id="chaos" min="0" max="1" step="0.05" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Сдвиг <span class="val" id="staggerVal">0.0</span></label>
+                        <input type="range" id="stagger" min="-1" max="1" step="0.1" value="0">
+                    </div>
+                </div>
+                
+                <div class="input-group" style="margin-top: 12px;">
+                    <label>Порог отсечения (Cutoff)</label>
+                    <input type="range" id="threshold" min="0" max="100" value="10">
+                </div>
+
+                <div class="control-grid" style="margin-top: 15px;">
+                    <div class="toggle-row">
+                        <label for="fillIcons">Заливка (Icons)</label>
+                        <input type="checkbox" id="fillIcons" checked>
+                    </div>
+                    <div class="toggle-row">
+                        <label for="invertSize">Инверсия</label>
+                        <input type="checkbox" id="invertSize">
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <div class="color-wrapper">
+                        <div class="color-left">
+                            <label for="bgColor" style="margin:0; cursor:pointer;">Фон</label>
+                            <input type="color" id="bgColor" value="#000000">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <label for="transparentBg" style="margin:0; cursor:pointer; font-size:10px; color:var(--text-muted);">Прозрачный</label>
+                            <input type="checkbox" id="transparentBg" style="width:14px; height:14px; accent-color:var(--accent);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+        
+        <div class="controls-footer">
+            <button class="btn-primary" onclick="downloadSVG()">
+                SVG
+            </button>
+            <button class="btn-secondary" onclick="downloadPNG()">
+                PNG
+            </button>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <canvas id="previewCanvas"></canvas>
+        <div class="stats-badge" id="stats">Загрузите изображение для старта</div>
+    </div>
+    </div>
+
+<script>
+    // --- ICON BANK (Curated list of cool looking icons) ---
+    const ICON_BANK = [
+        "favorite", "star", "bolt", "diamond", "token", "rocket", "face", "eco", 
+        "fingerprint", "water_drop", "local_fire_department", "psychology", "public", 
+        "science", "pets", "bug_report", "light_mode", "dark_mode", "bedtime", 
+        "spa", "florist", "filter_vintage", "palette", "brush", "auto_fix_high",
+        "flash_on", "sailing", "anchor", "extension", "casino", "sports_esports",
+        "headphones", "album", "visibility", "key", "shield", "verified", "workspace_premium",
+        "solar_power", "wind_power", "recycling", "tsunami", "cyclone", "air",
+        "ac_unit", "all_inclusive", "attach_money", "bar_chart", "bubble_chart",
+        "pie_chart", "call_split", "category", "code", "terminal", "webhook",
+        "memory", "developer_board", "router", "cast", "device_hub", "widgets",
+        "layers", "pentagon", "hexagon", "deployed_code", "forest", "volcano"
+    ];
+
+    function randomizeIcons() {
+        const count = Math.floor(Math.random() * 4) + 5; 
+        const selected = [];
+        for(let i=0; i<count; i++) {
+            const randomIcon = ICON_BANK[Math.floor(Math.random() * ICON_BANK.length)];
+            if(!selected.includes(randomIcon)) {
+                selected.push(randomIcon);
+            }
+        }
+        document.getElementById('iconInput').value = selected.join(' ');
+        renderPreview();
+    }
+
+    // --- MAIN LOGIC ---
+    const fileInput = document.getElementById('fileInput');
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const processCanvas = document.createElement('canvas');
+    const processCtx = processCanvas.getContext('2d', { willReadFrequently: true });
+
+    let sourceImage = new Image();
+    let isLoaded = false;
+    let renderSeed = Math.random(); 
+    const FONT_ASPECT = 0.6; 
+    
+    document.fonts.ready.then(function () {
+       if(isLoaded) renderPreview();
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Added 'transparentBg' to listeners
+    const uiIds = ['shapeType', 'resolution', 'scale', 'objScale', 'charInput', 'iconInput', 'threshold', 'bgColor', 'chaos', 'stagger', 'invertSize', 'rotation', 'fillIcons', 'transparentBg'];
+    
+    uiIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.addEventListener('input', (e) => {
+                if(id === 'resolution') document.getElementById('resVal').innerText = e.target.value;
+                if(id === 'scale') document.getElementById('scaleVal').innerText = e.target.value;
+                if(id === 'objScale') document.getElementById('objScaleVal').innerText = e.target.value;
+                if(id === 'rotation') document.getElementById('rotVal').innerText = e.target.value + '°';
+                if(id === 'chaos') document.getElementById('chaosVal').innerText = parseFloat(e.target.value).toFixed(2);
+                if(id === 'stagger') document.getElementById('staggerVal').innerText = e.target.value;
+                
+                if(id === 'shapeType') toggleInputs(e.target.value);
+                
+                renderPreview();
+            });
+        }
+    });
+
+    function toggleInputs(shape) {
+        const charGroup = document.getElementById('charGroup');
+        const iconGroup = document.getElementById('iconGroup');
+        
+        charGroup.classList.add('hidden');
+        iconGroup.classList.add('hidden');
+
+        if (shape === 'chars') charGroup.classList.remove('hidden');
+        if (shape === 'icons') iconGroup.classList.remove('hidden');
+    }
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            sourceImage.onload = () => { 
+                isLoaded = true; 
+                renderSeed = Math.random(); 
+                renderPreview(); 
+            }
+            sourceImage.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function mulberry32(a) {
+        return function() {
+          var t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ t >>> 15, t | 1);
+          t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+    }
+
+    function getPolyPoints(radius, sides) {
+        const points = [];
+        for (let i = 0; i < sides; i++) {
+            const angle = (i * 2 * Math.PI / sides) - (Math.PI / 2);
+            points.push({
+                x: Math.cos(angle) * radius,
+                y: Math.sin(angle) * radius
+            });
+        }
+        return points;
+    }
+
+    function renderPreview() {
+        if (!isLoaded) return;
+
+        const shapeType = document.getElementById('shapeType').value;
+        const cols = parseInt(document.getElementById('resolution').value);
+        const baseSize = parseInt(document.getElementById('scale').value); 
+        const objScaleParam = parseFloat(document.getElementById('objScale').value); 
+        const sizeMultiplier = 1 + objScaleParam;
+
+        const chars = document.getElementById('charInput').value || "01";
+        const iconsRaw = document.getElementById('iconInput').value || "favorite";
+        const icons = iconsRaw.split(' ').filter(i => i.trim() !== '');
+
+        const threshold = parseInt(document.getElementById('threshold').value);
+        const backgroundColor = document.getElementById('bgColor').value;
+        const chaosLevel = parseFloat(document.getElementById('chaos').value);
+        const stagger = parseFloat(document.getElementById('stagger').value);
+        
+        const invertSize = document.getElementById('invertSize').checked;
+        const fillIcons = document.getElementById('fillIcons').checked;
+        const rotationDeg = parseInt(document.getElementById('rotation').value);
+        const rotationRad = rotationDeg * Math.PI / 180;
+        
+        // NEW: Check transparency
+        const isTransparent = document.getElementById('transparentBg').checked;
+
+        const rand = mulberry32(Math.floor(renderSeed * 100000));
+        const cellAspect = (shapeType === 'chars') ? FONT_ASPECT : 1.0;
+        
+        const imgAspect = sourceImage.height / sourceImage.width;
+        const rows = Math.floor(cols * imgAspect * cellAspect);
+        
+        const cellWidth = baseSize * cellAspect;
+        const cellHeight = baseSize;
+
+        processCanvas.width = cols;
+        processCanvas.height = rows;
+        processCtx.drawImage(sourceImage, 0, 0, cols, rows);
+        const imageData = processCtx.getImageData(0, 0, cols, rows).data;
+
+        canvas.width = cols * cellWidth;
+        canvas.height = rows * cellHeight;
+        
+        // --- TRANSPARENCY LOGIC ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Always clear first
+        if (!isTransparent) {
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+
+        if (shapeType === 'chars') {
+             ctx.font = `bold ${baseSize * sizeMultiplier}px monospace`; 
+        } else if (shapeType === 'icons') {
+             const fontName = fillIcons ? 'Material Icons' : 'Material Icons Outlined';
+             ctx.font = `${baseSize * sizeMultiplier}px '${fontName}'`; 
+        }
+
+        let pixelIndex = 0;
+        let itemIndex = 0;
+        let count = 0;
+        const maxOffset = baseSize * 0.5; 
+
+        for (let y = 0; y < rows; y++) {
+            let rowShift = (y % 2 !== 0) ? cellWidth * stagger : 0;
+
+            for (let x = 0; x < cols; x++) {
+                const r = imageData[pixelIndex];
+                const g = imageData[pixelIndex + 1];
+                const b = imageData[pixelIndex + 2];
+                const a = imageData[pixelIndex + 3];
+                const brightness = (r + g + b) / 3;
+
+                if (a > 0 && brightness > threshold) {
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.strokeStyle = `rgb(${r},${g},${b})`;
+                    
+                    let offsetX = 0, offsetY = 0;
+                    if (chaosLevel > 0) {
+                         offsetX = (rand() - 0.5) * 2 * maxOffset * chaosLevel;
+                         offsetY = (rand() - 0.5) * 2 * maxOffset * chaosLevel;
+                    }
+
+                    const centerX = x * cellWidth + cellWidth / 2 + offsetX + rowShift;
+                    const centerY = y * cellHeight + cellHeight / 2 + offsetY;
+                    
+                    let normBright = brightness / 255;
+                    if (invertSize) normBright = 1.0 - normBright;
+
+                    let shapeSize = (cellWidth * (0.3 + (normBright * 0.7)) * sizeMultiplier);
+                    if (shapeSize < 0) shapeSize = 0;
+                    const halfSize = shapeSize / 2;
+
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(rotationRad); 
+
+                    if (shapeType === 'chars') {
+                        const char = chars[itemIndex % chars.length];
+                        ctx.fillText(char, 0, 0); 
+                        itemIndex++;
+                    }
+                    else if (shapeType === 'icons') {
+                        const icon = icons[itemIndex % icons.length];
+                        const brightScale = (0.3 + (normBright * 0.7));
+                        ctx.scale(brightScale, brightScale);
+                        ctx.fillText(icon, 0, 0);
+                        itemIndex++;
+                    }
+                    else if (shapeType === 'circles') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, halfSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    else if (shapeType === 'squares') {
+                        ctx.fillRect(-halfSize, -halfSize, shapeSize, shapeSize);
+                    }
+                    else if (shapeType === 'triangle') {
+                        const pts = getPolyPoints(halfSize, 3);
+                        ctx.beginPath();
+                        ctx.moveTo(pts[0].x, pts[0].y);
+                        pts.forEach(p => ctx.lineTo(p.x, p.y));
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    else if (shapeType === 'hexagon') {
+                        const pts = getPolyPoints(halfSize, 6);
+                        ctx.beginPath();
+                        ctx.moveTo(pts[0].x, pts[0].y);
+                        pts.forEach(p => ctx.lineTo(p.x, p.y));
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    else if (shapeType === 'cross') {
+                        const thick = shapeSize / 3;
+                        ctx.fillRect(-thick/2, -halfSize, thick, shapeSize); 
+                        ctx.fillRect(-halfSize, -thick/2, shapeSize, thick); 
+                    }
+                    else if (shapeType === 'star') {
+                        const outer = halfSize;
+                        const inner = outer * 0.4;
+                        ctx.beginPath();
+                        for(let i=0; i<5; i++){
+                            const ang = (i * 2 * Math.PI / 5) - Math.PI/2;
+                            ctx.lineTo(Math.cos(ang)*outer, Math.sin(ang)*outer);
+                            const angIn = ang + Math.PI/5;
+                            ctx.lineTo(Math.cos(angIn)*inner, Math.sin(angIn)*inner);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    else if (shapeType === 'heart') {
+                        const s = shapeSize / 30; 
+                        ctx.scale(s, -s); 
+                        ctx.beginPath();
+                        ctx.moveTo(0, -10); 
+                        ctx.bezierCurveTo(-15, 0, -15, 15, 0, 10);
+                        ctx.bezierCurveTo(15, 15, 15, 0, 0, -10);
+                        ctx.fill();
+                    }
+                    else if (shapeType === 'lines') {
+                        const length = cellWidth * 0.9 * sizeMultiplier;
+                        const brightAngle = Math.PI * normBright;
+                        ctx.rotate(brightAngle);
+                        ctx.lineWidth = baseSize * 0.15 * sizeMultiplier; 
+                        ctx.beginPath();
+                        ctx.moveTo(-length/2, 0);
+                        ctx.lineTo(length/2, 0);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                    count++;
+                }
+                pixelIndex += 4;
+            }
+        }
+        
+        document.getElementById('stats').innerHTML = `
+            <span style="color:var(--accent)">${shapeType.toUpperCase()}</span> 
+            <span style="margin:0 8px; color:var(--border)">|</span> 
+            Obj: ${count.toLocaleString()} 
+            <span style="margin:0 8px; color:var(--border)">|</span> 
+            ${canvas.width}x${canvas.height}
+        `;
+    }
+
+    // --- DOWNLOAD PNG ---
+    function downloadPNG() {
+        if (!isLoaded) { alert("Сначала загрузите изображение!"); return; }
+        const link = document.createElement('a');
+        link.download = 'genart_export.png';
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+
+    function downloadSVG() {
+        if (!isLoaded) { alert("Сначала загрузите изображение!"); return; }
+
+        const shapeType = document.getElementById('shapeType').value;
+        const cols = parseInt(document.getElementById('resolution').value);
+        const baseSize = parseInt(document.getElementById('scale').value);
+        const objScaleParam = parseFloat(document.getElementById('objScale').value);
+        const sizeMultiplier = 1 + objScaleParam;
+
+        const chars = document.getElementById('charInput').value || "01";
+        const iconsRaw = document.getElementById('iconInput').value || "favorite";
+        const icons = iconsRaw.split(' ').filter(i => i.trim() !== '');
+
+        const threshold = parseInt(document.getElementById('threshold').value);
+        const backgroundColor = document.getElementById('bgColor').value;
+        const chaosLevel = parseFloat(document.getElementById('chaos').value);
+        const stagger = parseFloat(document.getElementById('stagger').value);
+        
+        const invertSize = document.getElementById('invertSize').checked;
+        const rotationDeg = parseInt(document.getElementById('rotation').value);
+        const fillIcons = document.getElementById('fillIcons').checked;
+        const isTransparent = document.getElementById('transparentBg').checked;
+
+        const cellAspect = (shapeType === 'chars') ? FONT_ASPECT : 1.0;
+        const imgAspect = sourceImage.height / sourceImage.width;
+        const rows = Math.floor(cols * imgAspect * cellAspect);
+        
+        const cellWidth = baseSize * cellAspect;
+        const cellHeight = baseSize;
+        
+        processCanvas.width = cols;
+        processCanvas.height = rows;
+        processCtx.drawImage(sourceImage, 0, 0, cols, rows);
+        const imageData = processCtx.getImageData(0, 0, cols, rows).data;
+
+        const fontName = fillIcons ? 'Material Icons' : 'Material Icons Outlined';
+        const fontUrl = `https://fonts.googleapis.com/icon?family=${fontName.replace(/ /g, '+')}`;
+
+        // SVG Style with check for transparency
+        const svgBgStyle = isTransparent ? '' : `background-color: ${backgroundColor};`;
+        let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${cols * cellWidth}" height="${rows * cellHeight}" viewBox="0 0 ${cols * cellWidth} ${rows * cellHeight}" style="${svgBgStyle}">`;
+        
+        svgContent += `
+        <defs>
+            <style>
+                @import url('${fontUrl}');
+                .icon { 
+                    font-family: '${fontName}'; 
+                    dominant-baseline: middle; 
+                    text-anchor: middle; 
+                    user-select: none;
+                }
+                .char {
+                    font-family: monospace;
+                    font-weight: bold;
+                    dominant-baseline: middle; 
+                    text-anchor: middle; 
+                }
+            </style>
+        </defs>
+        `;
+
+        if (!isTransparent) {
+            svgContent += `<rect width="100%" height="100%" fill="${backgroundColor}" />`;
+        }
+
+        let pixelIndex = 0;
+        let itemIndex = 0;
+        const maxOffset = baseSize * 0.5;
+
+        for (let y = 0; y < rows; y++) {
+            let rowShift = (y % 2 !== 0) ? cellWidth * stagger : 0;
+
+            for (let x = 0; x < cols; x++) {
+                const r = imageData[pixelIndex];
+                const g = imageData[pixelIndex + 1];
+                const b = imageData[pixelIndex + 2];
+                const a = imageData[pixelIndex + 3];
+                const brightness = (r + g + b) / 3;
+
+                if (a > 0 && brightness > threshold) {
+                    const fill = `rgb(${r},${g},${b})`;
+                    let normBright = brightness / 255;
+                    if (invertSize) normBright = 1.0 - normBright;
+
+                    let offsetX = 0, offsetY = 0;
+                    if (chaosLevel > 0) {
+                         offsetX = (Math.random() - 0.5) * 2 * maxOffset * chaosLevel;
+                         offsetY = (Math.random() - 0.5) * 2 * maxOffset * chaosLevel;
+                    }
+                    
+                    const cx = (x * cellWidth + cellWidth / 2 + offsetX + rowShift).toFixed(1);
+                    const cy = (y * cellHeight + cellHeight / 2 + offsetY).toFixed(1);
+
+                    let shapeSize = (cellWidth * (0.3 + (normBright * 0.7)) * sizeMultiplier);
+                    if (shapeSize < 0) shapeSize = 0;
+                    const halfSize = (shapeSize / 2).toFixed(1);
+                    const shapeSizeFixed = shapeSize.toFixed(1);
+
+                    let transformAttr = "";
+                    if (rotationDeg !== 0) {
+                        transformAttr = `transform="rotate(${rotationDeg}, ${cx}, ${cy})"`;
+                    }
+
+                    if (shapeType === 'chars') {
+                        const char = chars[itemIndex % chars.length];
+                        svgContent += `<text x="${cx}" y="${cy}" fill="${fill}" font-size="${shapeSizeFixed}px" class="char" ${transformAttr}>${char}</text>`;
+                        itemIndex++;
+                    }
+                    else if (shapeType === 'icons') {
+                        const icon = icons[itemIndex % icons.length];
+                        svgContent += `<text x="${cx}" y="${cy}" fill="${fill}" font-size="${shapeSizeFixed}px" class="icon" ${transformAttr}>${icon}</text>`;
+                        itemIndex++;
+                    }
+                    else if (shapeType === 'circles') {
+                        if(halfSize > 0) svgContent += `<circle cx="${cx}" cy="${cy}" r="${halfSize}" fill="${fill}" />`; 
+                    }
+                    else if (shapeType === 'squares') {
+                        const sx = (cx - halfSize).toFixed(1);
+                        const sy = (cy - halfSize).toFixed(1);
+                        if(shapeSize > 0) svgContent += `<rect x="${sx}" y="${sy}" width="${shapeSizeFixed}" height="${shapeSizeFixed}" fill="${fill}" ${transformAttr} />`;
+                    }
+                    else if (shapeType === 'triangle') {
+                        const pts = getPolyPoints(halfSize, 3);
+                        const ptsStr = pts.map(p => `${(parseFloat(cx)+p.x).toFixed(1)},${(parseFloat(cy)+p.y).toFixed(1)}`).join(' ');
+                        svgContent += `<polygon points="${ptsStr}" fill="${fill}" transform="rotate(${rotationDeg}, ${cx}, ${cy})" />`;
+                    }
+                    else if (shapeType === 'hexagon') {
+                        const pts = getPolyPoints(halfSize, 6);
+                        const ptsStr = pts.map(p => `${(parseFloat(cx)+p.x).toFixed(1)},${(parseFloat(cy)+p.y).toFixed(1)}`).join(' ');
+                        svgContent += `<polygon points="${ptsStr}" fill="${fill}" transform="rotate(${rotationDeg}, ${cx}, ${cy})" />`;
+                    }
+                    else if (shapeType === 'cross') {
+                         const thick = (shapeSize / 3).toFixed(1);
+                         let crossGroup = `<g transform="translate(${cx}, ${cy}) rotate(${rotationDeg})">`;
+                         crossGroup += `<rect x="${-thick/2}" y="${-halfSize}" width="${thick}" height="${shapeSizeFixed}" fill="${fill}" />`;
+                         crossGroup += `<rect x="${-halfSize}" y="${-thick/2}" width="${shapeSizeFixed}" height="${thick}" fill="${fill}" />`;
+                         crossGroup += `</g>`;
+                         svgContent += crossGroup;
+                    }
+                    else if (shapeType === 'star') {
+                        let ptsStr = "";
+                        const outer = parseFloat(halfSize);
+                        const inner = outer * 0.4;
+                        for(let i=0; i<5; i++){
+                            const ang = (i * 2 * Math.PI / 5) - Math.PI/2;
+                            ptsStr += `${(Math.cos(ang)*outer).toFixed(1)},${(Math.sin(ang)*outer).toFixed(1)} `;
+                            const angIn = ang + Math.PI/5;
+                            ptsStr += `${(Math.cos(angIn)*inner).toFixed(1)},${(Math.sin(angIn)*inner).toFixed(1)} `;
+                        }
+                        svgContent += `<polygon points="${ptsStr}" fill="${fill}" transform="translate(${cx}, ${cy}) rotate(${rotationDeg})" />`;
+                    }
+                    else if (shapeType === 'heart') {
+                         const s = (shapeSize / 30).toFixed(2);
+                         const d = "M0,-10 C-15,-10 -15,5 0,10 C15,5 15,-10 0,-10 Z";
+                         svgContent += `<path d="${d}" fill="${fill}" transform="translate(${cx}, ${cy}) scale(${s}, ${-s}) rotate(${rotationDeg})" />`;
+                    }
+                    else if (shapeType === 'lines') {
+                        const length = cellWidth * 0.9 * sizeMultiplier;
+                        const brightAngleDeg = normBright * 180;
+                        const totalRotation = rotationDeg + brightAngleDeg;
+                        const strokeW = (baseSize * 0.15 * sizeMultiplier).toFixed(1);
+                        svgContent += `<line x1="${cx - length/2}" y1="${cy}" x2="${cx + length/2}" y2="${cy}" stroke="${fill}" stroke-width="${strokeW}" stroke-linecap="round" transform="rotate(${totalRotation.toFixed(1)}, ${cx}, ${cy})" />`;
+                    }
+                }
+                pixelIndex += 4;
+            }
+        }
+        svgContent += `</svg>`;
+
+        const blob = new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `genart_v10_${shapeType}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
