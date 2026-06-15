@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patoline Generator | P.MIROSHNIK.TOOLS</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        swiss: {
+                            black: '#0A0A0A',
+                            white: '#FFFFFF',
+                            gray: '#E5E5E5',
+                            lightGray: '#F5F5F5',
+                            accent: '#0000FF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F5F5F5; color: #0A0A0A; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        /* Swiss Design Utility Classes */
+        .swiss-border { border: 2px solid #000; }
+        .swiss-border-b { border-bottom: 2px solid #000; }
+        .swiss-border-t { border-top: 2px solid #000; }
+        .swiss-border-l { border-left: 2px solid #000; }
+        .swiss-border-r { border-right: 2px solid #000; }
+        .swiss-shadow { box-shadow: 6px 6px 0px 0px rgba(0,0,0,1); }
+        .swiss-shadow-hover:hover { box-shadow: 2px 2px 0px 0px rgba(0,0,0,1); transform: translate(4px, 4px); }
+        .swiss-transition { transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        
+        .bg-swiss-light { background-color: #F4F4F5; }
+        
+        /* Custom range slider for Swiss look */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #0A0A0A;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 16px;
+            width: 8px;
+            background: #0000FF;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -6px;
+        }
+        
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 32px;
+            padding: 0;
+            background: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid #0A0A0A; border-radius: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const NavHeader = () => (
+            <nav className="swiss-border-b bg-white p-4 flex justify-between items-center sticky top-0 z-50">
+                <div className="flex items-center gap-4">
+                    <a href="../index.html" className="font-mono font-bold text-xl tracking-tighter hover:text-swiss-accent swiss-transition">
+                        P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
+                    </a>
+                    <span className="font-mono text-sm text-gray-500 bg-swiss-light px-2 py-1 swiss-border">/ patoline</span>
+                </div>
+            </nav>
+        );
+
+        const SwissButton = ({ children, variant = 'primary', className = '', onClick }) => {
+            const styles = {
+                primary: 'bg-swiss-black text-swiss-white border-2 border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent',
+                secondary: 'bg-transparent text-swiss-black border-2 border-swiss-black hover:bg-swiss-black hover:text-swiss-white',
+            };
+            return (
+                <button 
+                    onClick={onClick}
+                    className={`${styles[variant]} font-mono font-bold text-xs tracking-widest uppercase px-4 py-2 transition-colors duration-200 rounded-none inline-block ${className}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        const PatolineApp = () => {
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const animationId = useRef(null);
+            const drawProgress = useRef(0);
+            
+            const [params, setParams] = useState({
+                type: 'hypotrochoid',
+                R: 150,
+                r: 52,
+                d: 75,
+                revs: 100,
+                thickness: 1,
+                color: '#0000FF',
+                animate: true
+            });
+
+            const stepSize = 0.05;
+
+            const updateParam = (key, value) => {
+                setParams(prev => ({ ...prev, [key]: value }));
+            };
+
+            const randomize = () => {
+                setParams(prev => ({
+                    ...prev,
+                    R: Math.floor(Math.random() * 290) + 10,
+                    r: Math.floor(Math.random() * 150) + 1,
+                    d: Math.floor(Math.random() * 200),
+                    color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+                }));
+            };
+
+            const exportPNG = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                
+                // If animating, finish drawing instantly before export
+                if (params.animate && drawProgress.current < params.revs * Math.PI * 2) {
+                    drawInstant();
+                }
+                
+                const dataURL = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `patoline-${Date.now()}.png`;
+                link.href = dataURL;
+                link.click();
+            };
+
+            const getPoint = (theta, p, width, height) => {
+                const { R, r, d, type, revs } = p;
+                let x, y;
+
+                if (type === 'hypotrochoid') {
+                    x = (R - r) * Math.cos(theta) + d * Math.cos(((R - r) / r) * theta);
+                    y = (R - r) * Math.sin(theta) - d * Math.sin(((R - r) / r) * theta);
+                } else if (type === 'epitrochoid') {
+                    x = (R + r) * Math.cos(theta) - d * Math.cos(((R + r) / r) * theta);
+                    y = (R + r) * Math.sin(theta) - d * Math.sin(((R + r) / r) * theta);
+                } else if (type === 'linear') {
+                    const maxT = revs * Math.PI * 2;
+                    const totalWidth = width * 0.9;
+                    const startX = -totalWidth / 2;
+                    const progress = maxT > 0 ? theta / maxT : 0;
+                    
+                    const x_center = startX + progress * totalWidth;
+                    const waveY = Math.sin(progress * Math.PI * 2 * (R / 50)) * r;
+                    
+                    x = x_center - d * Math.sin(theta);
+                    y = waveY - d * Math.cos(theta);
+                } else if (type === 'sine_guilloche') {
+                    const totalLines = Math.max(1, Math.floor(revs));
+                    const lineIndex = Math.floor(theta / (Math.PI * 2));
+                    const localTheta = theta % (Math.PI * 2); 
+                    const totalWidth = width * 0.9;
+                    
+                    const progress = localTheta / (Math.PI * 2);
+                    const x_base = -totalWidth/2 + progress * totalWidth;
+                    
+                    const phaseOffset = (lineIndex / totalLines) * Math.PI * 2;
+                    const fastPhase = progress * Math.PI * 2 * R + phaseOffset;
+                    
+                    const slowFreq = Math.max(1, Math.floor(R / 10)); 
+                    const envelope = d + r * Math.sin(progress * Math.PI * 2 * slowFreq);
+                    
+                    const y_val = (envelope / 2) * (1 - Math.cos(fastPhase));
+                    
+                    x = x_base;
+                    y = y_val - d;
+                }
+                
+                return { x, y };
+            };
+
+            const drawInstant = () => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const maxTheta = params.revs * Math.PI * 2;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = params.color;
+                ctx.lineWidth = params.thickness;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                let prevPt = getPoint(0, params, canvas.width, canvas.height);
+                ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
+
+                for (let t = 0; t <= maxTheta; t += stepSize) {
+                    const pt = getPoint(t, params, canvas.width, canvas.height);
+                    if (Math.abs(pt.x - prevPt.x) > canvas.width / 4 || Math.abs(pt.y - prevPt.y) > canvas.height / 4) {
+                        ctx.moveTo(cx + pt.x, cy + pt.y);
+                    } else {
+                        ctx.lineTo(cx + pt.x, cy + pt.y);
+                    }
+                    prevPt = pt;
+                }
+
+                ctx.stroke();
+            };
+
+            const animateDraw = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const maxTheta = params.revs * Math.PI * 2;
+                const drawSpeed = 2; 
+                
+                ctx.beginPath();
+                ctx.strokeStyle = params.color;
+                ctx.lineWidth = params.thickness;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                let prevPt = getPoint(drawProgress.current, params, canvas.width, canvas.height);
+                ctx.moveTo(cx + prevPt.x, cy + prevPt.y);
+
+                const targetProgress = Math.min(drawProgress.current + drawSpeed, maxTheta);
+                
+                for (let t = drawProgress.current; t <= targetProgress; t += stepSize) {
+                    const pt = getPoint(t, params, canvas.width, canvas.height);
+                    if (Math.abs(pt.x - prevPt.x) > canvas.width / 4 || Math.abs(pt.y - prevPt.y) > canvas.height / 4) {
+                        ctx.moveTo(cx + pt.x, cy + pt.y);
+                    } else {
+                        ctx.lineTo(cx + pt.x, cy + pt.y);
+                    }
+                    prevPt = pt;
+                }
+
+                ctx.stroke();
+                drawProgress.current = targetProgress;
+
+                if (drawProgress.current < maxTheta) {
+                    animationId.current = requestAnimationFrame(animateDraw);
+                }
+            };
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const container = containerRef.current;
+                
+                const handleResize = () => {
+                    canvas.width = container.clientWidth;
+                    canvas.height = container.clientHeight;
+                    
+                    if (animationId.current) cancelAnimationFrame(animationId.current);
+                    drawProgress.current = 0;
+                    
+                    if (params.animate) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        animateDraw();
+                    } else {
+                        drawInstant();
+                    }
+                };
+
+                handleResize();
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            useEffect(() => {
+                if (animationId.current) cancelAnimationFrame(animationId.current);
+                drawProgress.current = 0;
+                
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                
+                if (params.animate) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    animateDraw();
+                } else {
+                    drawInstant();
+                }
+            }, [params]);
+
+            return (
+                <div className="flex flex-col lg:flex-row min-h-[calc(100vh-68px)]">
+                    {/* Control Panel */}
+                    <div className="w-full lg:w-80 bg-white swiss-border-r p-6 flex flex-col gap-6 overflow-y-auto h-auto lg:h-[calc(100vh-68px)] shrink-0">
+                        <div>
+                            <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">Patoline</h1>
+                            <p className="font-mono text-xs text-gray-500 uppercase tracking-widest">Guilloche Generator</p>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest">Pattern Type</label>
+                                <select 
+                                    className="swiss-border p-2 font-mono text-sm bg-white outline-none focus:border-swiss-accent"
+                                    value={params.type}
+                                    onChange={(e) => updateParam('type', e.target.value)}
+                                >
+                                    <option value="hypotrochoid">Hypotrochoid (Inner)</option>
+                                    <option value="epitrochoid">Epitrochoid (Outer)</option>
+                                    <option value="linear">Linear Ribbon</option>
+                                    <option value="sine_guilloche">Sine Guilloche</option>
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                    <span>Fixed Radius</span>
+                                    <span className="text-swiss-accent">{params.R}</span>
+                                </label>
+                                <input type="range" min="10" max="300" value={params.R} onChange={(e) => updateParam('R', parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                    <span>Rolling Radius</span>
+                                    <span className="text-swiss-accent">{params.r}</span>
+                                </label>
+                                <input type="range" min="1" max="150" value={params.r} onChange={(e) => updateParam('r', parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                    <span>Pen Offset</span>
+                                    <span className="text-swiss-accent">{params.d}</span>
+                                </label>
+                                <input type="range" min="0" max="200" value={params.d} onChange={(e) => updateParam('d', parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                    <span>Revolutions</span>
+                                    <span className="text-swiss-accent">{params.revs}</span>
+                                </label>
+                                <input type="range" min="1" max="300" value={params.revs} onChange={(e) => updateParam('revs', parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest flex justify-between">
+                                    <span>Line Thickness</span>
+                                    <span className="text-swiss-accent">{params.thickness}</span>
+                                </label>
+                                <input type="range" min="0.1" max="10" step="0.1" value={params.thickness} onChange={(e) => updateParam('thickness', parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="font-mono text-xs font-bold uppercase tracking-widest">Line Color</label>
+                                <div className="flex gap-2">
+                                    <input type="color" value={params.color} onChange={(e) => updateParam('color', e.target.value)} className="w-10 h-8 p-0 border-0" />
+                                    <input type="text" value={params.color} onChange={(e) => updateParam('color', e.target.value)} className="swiss-border-b font-mono text-sm w-full uppercase focus:outline-none focus:border-swiss-accent bg-transparent px-1" />
+                                </div>
+                            </div>
+
+                            <label className="flex items-center gap-2 cursor-pointer mt-2">
+                                <input 
+                                    type="checkbox" 
+                                    checked={params.animate} 
+                                    onChange={(e) => updateParam('animate', e.target.checked)}
+                                    className="w-4 h-4 accent-swiss-accent cursor-pointer"
+                                />
+                                <span className="font-mono text-xs font-bold uppercase tracking-widest">Animate Drawing</span>
+                            </label>
+                        </div>
+
+                        <div className="flex gap-2 mt-auto pt-6 border-t-2 border-swiss-black">
+                            <SwissButton variant="secondary" onClick={randomize} className="w-full text-center">Random</SwissButton>
+                            <SwissButton variant="primary" onClick={exportPNG} className="w-full text-center">Export PNG</SwissButton>
+                        </div>
+                    </div>
+
+                    {/* Canvas Area */}
+                    <div className="flex-1 bg-swiss-black relative" ref={containerRef}>
+                        <canvas ref={canvasRef} className="absolute inset-0 block"></canvas>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => (
+            <>
+                <NavHeader />
+                <PatolineApp />
+            </>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
