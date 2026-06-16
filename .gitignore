@@ -1,0 +1,4 @@
+.netlify/
+*.svg
+*.png
+.DS_Store
