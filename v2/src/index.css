@@ -62,3 +62,16 @@ input:focus, textarea:focus, button:focus {
 .swiss-grid-item {
     background-color: #FFFFFF;
 }
+
+/* Global utility classes */
+.swiss-border { border: 2px solid var(--color-swiss-black); }
+.swiss-border-b { border-bottom: 2px solid var(--color-swiss-black); }
+.swiss-border-r { border-right: 2px solid var(--color-swiss-black); }
+.swiss-shadow { box-shadow: 4px 4px 0px 0px var(--color-swiss-black); }
+.swiss-shadow-hover:hover { box-shadow: 6px 6px 0px 0px var(--color-swiss-black); transform: translate(-2px, -2px); }
+.swiss-transition { transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--color-swiss-lightGray); border-left: 1px solid var(--color-swiss-gray); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-swiss-black); }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-swiss-accent); }

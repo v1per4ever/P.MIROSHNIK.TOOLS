@@ -13,74 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        swiss: {
-                            black: '#0A0A0A',
-                            white: '#FFFFFF',
-                            gray: '#E5E5E5',
-                            lightGray: '#F5F5F5',
-                            accent: '#0000FF',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Inter"', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #F5F5F5; color: #0A0A0A; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        /* Swiss Design Utility Classes */
-        .swiss-border { border: 2px solid #000; }
-        .swiss-border-b { border-bottom: 2px solid #000; }
-        .swiss-border-t { border-top: 2px solid #000; }
-        .swiss-border-l { border-left: 2px solid #000; }
-        .swiss-border-r { border-right: 2px solid #000; }
-        .swiss-shadow { box-shadow: 6px 6px 0px 0px rgba(0,0,0,1); }
-        .swiss-shadow-hover:hover { box-shadow: 2px 2px 0px 0px rgba(0,0,0,1); transform: translate(4px, 4px); }
-        .swiss-transition { transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
-        
-        .bg-swiss-light { background-color: #F4F4F5; }
-        
-        /* Custom range slider for Swiss look */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]:focus { outline: none; }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #0A0A0A;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            height: 16px;
-            width: 8px;
-            background: #0000FF;
-            cursor: pointer;
-            -webkit-appearance: none;
-            margin-top: -6px;
-        }
-        
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: none;
-            width: 100%;
-            height: 32px;
-            padding: 0;
-            background: transparent;
-        }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: 2px solid #0A0A0A; border-radius: 0; }
-    </style>
+    
+    
     <link rel="stylesheet" href="/src/index.css" />
 </head>
 <body>
