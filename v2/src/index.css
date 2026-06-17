@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+@theme {
+  --color-swiss-black: #0A0A0A;
+  --color-swiss-white: #FFFFFF;
+  --color-swiss-gray: #E5E5E5;
+  --color-swiss-lightGray: #F5F5F5;
+  --color-swiss-accent: #0000FF;
+
+  --font-sans: "Inter", Helvetica Neue, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --tracking-tighter: -0.04em;
+  --tracking-tight: -0.02em;
+  --tracking-widest: 0.1em;
+
+  --animate-marquee: marquee 20s linear infinite;
+
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+body {
+    background-color: #FFFFFF;
+    color: #0A0A0A;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+    background-color: #0000FF;
+    color: #FFFFFF;
+}
+
+/* Minimalist Scrollbar */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #FFFFFF; border-left: 1px solid #E5E5E5; }
+::-webkit-scrollbar-thumb { background: #0A0A0A; }
+::-webkit-scrollbar-thumb:hover { background: #0000FF; }
+
+.marquee-container {
+    display: flex;
+    width: 200%;
+}
+
+/* Strict focus rings */
+input:focus, textarea:focus, button:focus {
+    outline: none;
+    border-color: #0000FF;
+    box-shadow: none;
+}
+
+/* Grid system border hacks for perfect 1px lines */
+.swiss-grid-container {
+    background-color: #0A0A0A;
+    gap: 1px;
+}
+.swiss-grid-item {
+    background-color: #FFFFFF;
+}
