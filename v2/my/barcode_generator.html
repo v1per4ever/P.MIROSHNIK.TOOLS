@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор штрих-кодов | P.MIROSHNIK.TOOLS</title>
+    
+                
+            
+        
+    <!-- Libraries for Barcode & PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        swiss: {
+                            black: '#0A0A0A',
+                            white: '#FFFFFF',
+                            gray: '#E5E5E5',
+                            lightGray: '#F5F5F5',
+                            accent: '#0000FF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F5F5F5; color: #0A0A0A; font-family: 'Inter', sans-serif; }
+        /* Swiss Design Utility Classes */
+        .swiss-border { border: 2px solid #000; }
+        .swiss-border-b { border-bottom: 2px solid #000; }
+        .swiss-border-t { border-top: 2px solid #000; }
+        .swiss-border-l { border-left: 2px solid #000; }
+        .swiss-border-r { border-right: 2px solid #000; }
+        .swiss-shadow { box-shadow: 6px 6px 0px 0px rgba(0,0,0,1); }
+        .swiss-shadow-hover:hover { box-shadow: 2px 2px 0px 0px rgba(0,0,0,1); transform: translate(4px, 4px); }
+        .swiss-transition { transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        
+        .bg-swiss-light { background-color: #F4F4F5; }
+    </style>
+    <link rel="stylesheet" href="/src/index.css" />
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/barcode.jsx"></script>
+</body>
+</html>

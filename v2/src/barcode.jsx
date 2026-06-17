@@ -1,0 +1,420 @@
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+
+
+        const { jsPDF } = window.jspdf;
+
+        const NavHeader = () => (
+            <nav className="swiss-border-b bg-white p-4 flex justify-between items-center sticky top-0 z-50">
+                <div className="flex items-center gap-4">
+                    <a href="../index.html" className="font-mono font-bold text-xl tracking-tighter hover:text-swiss-accent swiss-transition">
+                        P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
+                    </a>
+                    <span className="font-mono text-sm text-gray-500 bg-swiss-light px-2 py-1 swiss-border">/ barcode-generator</span>
+                </div>
+            </nav>
+        );
+
+        const SwissButton = ({ children, variant = 'primary', className = '', onClick, disabled }) => {
+            const styles = {
+                primary: 'bg-swiss-black text-swiss-white border border-swiss-black hover:bg-swiss-accent hover:border-swiss-accent disabled:opacity-50 disabled:cursor-not-allowed',
+                secondary: 'bg-transparent text-swiss-black border border-swiss-black hover:bg-swiss-black hover:text-swiss-white disabled:opacity-50 disabled:cursor-not-allowed',
+            };
+            return (
+                <button 
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={`${styles[variant]} font-mono font-bold text-sm tracking-widest uppercase px-6 py-4 transition-colors duration-200 rounded-none inline-block ${className}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        const BarcodeGeneratorApp = () => {
+            const [file, setFile] = useState(null);
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [status, setStatus] = useState('Ожидание файла...');
+            const [config, setConfig] = useState({
+                width_mm: 54,
+                height_mm: 34,
+                font_size_barcode: 8,
+                font_size_name: 6,
+                font_size_wb: 9,
+                font_size_seller: 7,
+                barcode_height_mm: 5,
+                margin_top_mm: 3,
+                spacing_text_mm: 5
+            });
+            const [previewUrl, setPreviewUrl] = useState(null);
+
+            const fileInputRef = useRef(null);
+
+            // Font cache for jsPDF
+            const fontBase64Ref = useRef(null);
+
+            const getFontBase64 = async () => {
+                if (fontBase64Ref.current) return fontBase64Ref.current;
+                
+                try {
+                    // Fetch Roboto font from CDN which supports Cyrillic
+                    const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+                    const response = await fetch(fontUrl);
+                    const buffer = await response.arrayBuffer();
+                    const bytes = new Uint8Array(buffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.byteLength; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const base64 = window.btoa(binary);
+                    fontBase64Ref.current = base64;
+                    return base64;
+                } catch (e) {
+                    console.error("Error fetching font", e);
+                    return null;
+                }
+            };
+
+            const handleFileChange = (e) => {
+                if (e.target.files.length > 0) {
+                    setFile(e.target.files[0]);
+                    setStatus(`Выбран файл: ${e.target.files[0].name}`);
+                }
+            };
+
+            const handleConfigChange = (e) => {
+                const { name, value } = e.target;
+                setConfig(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+            };
+
+            const wrapText = (doc, text, maxWidth, fontSize) => {
+                doc.setFontSize(fontSize);
+                const lines = doc.splitTextToSize(text, maxWidth);
+                return lines;
+            };
+
+            const generatePDF = (row) => {
+                return new Promise(async (resolve) => {
+                    const article_seller = (row['Артикул продавца'] || '').trim();
+                    const article_wb = (row['Артикул WB'] || '').trim();
+                    const barcode_value = (row['Баркоды'] || '').trim();
+                    const name = (row['Наименование'] || '').trim();
+
+                    if (!article_seller || !barcode_value) {
+                        resolve(null);
+                        return;
+                    }
+
+                    const isLandscape = config.width_mm >= config.height_mm;
+                    const doc = new jsPDF({
+                        orientation: isLandscape ? 'landscape' : 'portrait',
+                        unit: 'mm',
+                        format: isLandscape ? [config.width_mm, config.height_mm] : [config.height_mm, config.width_mm]
+                    });
+
+                    // Load custom font for Cyrillic support
+                    const fontBase64 = await getFontBase64();
+                    if (fontBase64) {
+                        doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+                        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+                        doc.setFont('Roboto', 'normal');
+                    } else {
+                        doc.setFont('helvetica', 'bold'); // Fallback
+                    }
+
+                    const width = config.width_mm;
+                    const height = config.height_mm;
+                    const maxTextWidth = width * 0.9;
+                    let currentY = config.margin_top_mm;
+
+                    const drawTextTopDown = (text, defaultFontSize) => {
+                        if (!text) return;
+                        let fontSize = defaultFontSize;
+                        doc.setFontSize(fontSize);
+                        while (doc.getTextWidth(text) > maxTextWidth && fontSize > 0.5) {
+                            fontSize -= 0.5;
+                            doc.setFontSize(fontSize);
+                        }
+                        currentY += (fontSize * 0.3527);
+                        doc.text(text, width / 2, currentY, { align: 'center' });
+                        currentY += (config.spacing_text_mm / 2);
+                    };
+
+                    const drawMultilineTopDown = (text, defaultFontSize) => {
+                        if (!text) return;
+                        let fontSize = defaultFontSize;
+                        doc.setFontSize(fontSize);
+                        let lines = doc.splitTextToSize(text, maxTextWidth);
+                        
+                        let maxLineWidth = Math.max(...lines.map(l => doc.getTextWidth(l)));
+                        while (maxLineWidth > maxTextWidth && fontSize > 0.5) {
+                            fontSize -= 0.5;
+                            doc.setFontSize(fontSize);
+                            lines = doc.splitTextToSize(text, maxTextWidth);
+                            maxLineWidth = Math.max(...lines.map(l => doc.getTextWidth(l)));
+                        }
+                        
+                        lines.forEach(line => {
+                            currentY += (fontSize * 0.3527);
+                            doc.text(line, width / 2, currentY, { align: 'center' });
+                            currentY += 0.5;
+                        });
+                        currentY += (config.spacing_text_mm / 2) - 0.5;
+                    };
+
+                    // Draw Text Top-Down
+                    if (article_seller) {
+                        drawTextTopDown(`Артикул продавца: ${article_seller}`, config.font_size_seller);
+                    }
+                    if (article_wb) {
+                        drawTextTopDown(`Артикул WB: ${article_wb}`, config.font_size_wb);
+                    }
+                    if (name) {
+                        drawMultilineTopDown(name, config.font_size_name);
+                    }
+                    if (barcode_value) {
+                        drawTextTopDown(barcode_value, config.font_size_barcode);
+                    }
+
+                    // Draw Barcode Image below the text
+                    const bcWidth = width * 0.9;
+                    const bcHeight = config.barcode_height_mm;
+                    const x = (width - bcWidth) / 2;
+                    
+                    // Generate barcode to base64 canvas
+                    const canvas = document.createElement('canvas');
+                    try {
+                        JsBarcode(canvas, barcode_value, {
+                            format: "CODE128",
+                            displayValue: false,
+                            width: 6, // Увеличиваем плотность пикселей по ширине
+                            height: bcHeight * 15, // Увеличиваем плотность пикселей по высоте
+                            margin: 0
+                        });
+                        
+                        const barcodeImgData = canvas.toDataURL("image/png");
+                        doc.addImage(barcodeImgData, 'PNG', x, currentY, bcWidth, bcHeight);
+
+                        const pdfOutput = doc.output('arraybuffer');
+                        
+                        // Safe filename
+                        const safe_filename = article_seller.replace(/[^a-zA-Z0-9.\-_]/g, '') || `label_${barcode_value}`;
+                        
+                        resolve({ name: `${safe_filename}.pdf`, data: pdfOutput });
+                    } catch (e) {
+                        console.error("Barcode error", e);
+                        resolve(null);
+                    }
+                });
+            };
+
+            const generatePreview = async () => {
+                const mockRow = {
+                    'Артикул продавца': 'ART-TEST',
+                    'Артикул WB': '12345678',
+                    'Баркоды': '4607123412345',
+                    'Наименование': 'Пример названия тестового товара для проверки переносов'
+                };
+                const pdfObj = await generatePDF(mockRow);
+                if (pdfObj) {
+                    const blob = new Blob([pdfObj.data], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    setPreviewUrl(url);
+                }
+            };
+
+            useEffect(() => {
+                generatePreview();
+            }, [config]);
+
+            const startGeneration = () => {
+                if (!file) return;
+                setIsGenerating(true);
+                setProgress(0);
+                setStatus('Чтение CSV файла...');
+
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: async function(results) {
+                        const rows = results.data;
+                        const total = rows.length;
+                        setStatus(`Найдено ${total} строк. Генерация PDF...`);
+
+                        const zip = new JSZip();
+                        let processed = 0;
+
+                        for (let i = 0; i < total; i++) {
+                            const pdfObj = await generatePDF(rows[i]);
+                            if (pdfObj) {
+                                zip.file(pdfObj.name, pdfObj.data);
+                            }
+                            processed++;
+                            
+                            // Update UI every 5 items to avoid blocking the main thread entirely
+                            if (processed % 5 === 0 || processed === total) {
+                                setProgress(Math.round((processed / total) * 100));
+                            }
+                            
+                            // Small delay to allow UI to render
+                            await new Promise(r => setTimeout(r, 0));
+                        }
+
+                        setStatus('Упаковка в ZIP архив...');
+                        
+                        zip.generateAsync({ type: 'blob' }).then(function(content) {
+                            const url = window.URL.createObjectURL(content);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `labels_archive_${Date.now()}.zip`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+
+                            setStatus('Готово! Файл скачан.');
+                            setIsGenerating(false);
+                        });
+                    },
+                    error: function(error) {
+                        setStatus(`Ошибка парсинга: ${error.message}`);
+                        setIsGenerating(false);
+                    }
+                });
+            };
+
+            const downloadTemplate = () => {
+                const csvContent = "\uFEFFАртикул продавца,Артикул WB,Баркоды,Наименование\nART-TEST,12345678,4607123412345,Пример названия товара\n";
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8-sig;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'template.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            const downloadPreview = async () => {
+                const mockRow = {
+                    'Артикул продавца': 'ART-TEST',
+                    'Артикул WB': '12345678',
+                    'Баркоды': '4607123412345',
+                    'Наименование': 'Пример названия тестового товара для проверки переносов'
+                };
+                const pdfObj = await generatePDF(mockRow);
+                if (pdfObj) {
+                    const blob = new Blob([pdfObj.data], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'preview_label.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            };
+
+            return (
+                <div className="min-h-screen p-8 lg:p-16 flex flex-col items-center justify-center relative">
+                    <div className="w-full max-w-4xl">
+                        <div className="inline-block border border-swiss-black px-3 py-1 mb-8 font-mono text-xs uppercase tracking-widest bg-swiss-white">
+                            Client-Side / 100% В браузере
+                        </div>
+                        
+                        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4 leading-none">
+                            Barcode <span className="text-swiss-accent">Generator</span>.
+                        </h1>
+                        <p className="font-mono text-gray-600 mb-12 max-w-2xl leading-relaxed">
+                            Массовая генерация PDF-этикеток Code128 на основе CSV. Вся обработка происходит прямо в вашем браузере — никаких серверов, максимальная безопасность.
+                        </p>
+
+                        <div className="bg-swiss-white border border-swiss-black p-8 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                <div className="border border-swiss-black bg-swiss-lightGray flex flex-col h-[250px] relative">
+                                    <div className="absolute top-0 left-0 bg-swiss-black text-swiss-white font-mono text-[10px] uppercase px-2 py-1 z-10">
+                                        Live Preview
+                                    </div>
+                                    {previewUrl ? (
+                                        <iframe src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`} className="w-full h-full border-none pointer-events-none overflow-hidden"></iframe>
+                                    ) : (
+                                        <div className="flex-1 flex items-center justify-center font-mono text-xs uppercase text-gray-400">Генерация превью...</div>
+                                    )}
+                                </div>
+                                
+                                <div className="flex flex-col justify-center">
+                                    <div className="font-mono text-sm font-bold uppercase mb-4 border-b border-swiss-black pb-2">Статус операции</div>
+                                    <div className="font-mono text-sm text-gray-600 mb-4">{status}</div>
+                                    
+                                    <div className="w-full bg-swiss-lightGray h-2 mb-2 border border-swiss-black overflow-hidden">
+                                        <div className="bg-swiss-accent h-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                                    </div>
+                                    <div className="font-mono text-xs text-right">{progress}%</div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                {[
+                                    { label: 'Ширина (мм)', name: 'width_mm' },
+                                    { label: 'Высота (мм)', name: 'height_mm' },
+                                    { label: 'Размер шрифта Баркода', name: 'font_size_barcode' },
+                                    { label: 'Высота Баркода', name: 'barcode_height_mm' }
+                                ].map((item, i) => (
+                                    <div key={i}>
+                                        <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-1">{item.label}</label>
+                                        <input 
+                                            type="number" 
+                                            name={item.name}
+                                            value={config[item.name]} 
+                                            onChange={handleConfigChange}
+                                            className="w-full border-b border-swiss-black py-2 font-mono text-sm focus:outline-none focus:border-swiss-accent"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="border border-dashed border-swiss-black p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-swiss-lightGray transition-colors" onClick={() => fileInputRef.current.click()}>
+                                    <input 
+                                        type="file" 
+                                        accept=".csv" 
+                                        className="hidden" 
+                                        ref={fileInputRef} 
+                                        onChange={handleFileChange} 
+                                    />
+                                    <span className="font-mono text-sm uppercase tracking-widest font-bold text-center">
+                                        {file ? file.name : '1. ЗАГРУЗИТЬ CSV ФАЙЛ'}
+                                    </span>
+                                </div>
+                                
+                                <SwissButton variant="primary" onClick={startGeneration} disabled={isGenerating || !file} className="w-full">
+                                    {isGenerating ? 'ГЕНЕРАЦИЯ АРХИВА...' : '2. СГЕНЕРИРОВАТЬ ZIP'}
+                                </SwissButton>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <SwissButton variant="secondary" onClick={downloadTemplate} className="w-full">
+                                    Скачать шаблон CSV
+                                </SwissButton>
+                                <SwissButton variant="secondary" onClick={downloadPreview} disabled={!previewUrl} className="w-full">
+                                    Скачать тестовый PDF
+                                </SwissButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => (
+            <>
+                <NavHeader />
+                <BarcodeGeneratorApp />
+            </>
+        );
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
