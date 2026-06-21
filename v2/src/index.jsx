@@ -195,7 +195,10 @@ import { createRoot } from 'react-dom/client';
                         <div className="font-black text-4xl md:text-5xl tracking-tighter uppercase leading-none mb-4">
                             P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
                         </div>
-                        <p className="font-mono text-sm text-gray-500 max-w-xs">Собственная экосистема рабочих инструментов.</p>
+                        <p className="font-mono text-sm text-gray-500 max-w-xs mb-6">Собственная экосистема рабочих инструментов.</p>
+                        <p className="font-mono text-xs text-gray-500">
+                            Useful links for agents: <a href="/.well-known/api-catalog" className="text-swiss-accent hover:underline">API catalog</a>, <a href="/.well-known/agent-skills/index.json" className="text-swiss-accent hover:underline">skills index</a>, <a href="/llms.txt" className="text-swiss-accent hover:underline">llms.txt</a>.
+                        </p>
                     </div>
                 </div>
                 <div className="max-w-7xl mx-auto mt-8 flex flex-col md:flex-row justify-between items-start md:items-center font-mono text-xs text-gray-600 uppercase tracking-widest">
