@@ -145,6 +145,11 @@ import { createRoot } from 'react-dom/client';
                     title: "GenArt Shape Generator",
                     content: "Утилита для генерации ASCII-подобного паттерна из изображений. Поддерживает символы, иконки, геометрические фигуры.",
                     link: "./my/gen_shape.html"
+                },
+                {
+                    title: "World Clock",
+                    content: "Синхронизированное мировое время для основных финансовых и технологических хабов. Минималистичный интерфейс.",
+                    link: "./my/world_clock.html"
                 }
             ];
 

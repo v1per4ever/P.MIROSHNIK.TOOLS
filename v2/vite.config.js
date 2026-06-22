@@ -14,7 +14,8 @@ export default defineConfig({
         chroma: resolve(__dirname, 'my/chroma_color_tools.html'),
         ribbon: resolve(__dirname, 'my/linguistic_ribbon_editor.html'),
         barcode: resolve(__dirname, 'my/barcode_generator.html'),
-        wb: resolve(__dirname, 'my/WB XLSX CSV Sanitizer.html')
+        wb: resolve(__dirname, 'my/WB XLSX CSV Sanitizer.html'),
+        world_clock: resolve(__dirname, 'my/world_clock.html')
       }
     }
   }
