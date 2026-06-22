@@ -31,7 +31,7 @@ const Clock = ({ city, timeZone }) => {
                 <p className="font-mono text-sm text-gray-500 uppercase tracking-widest">{timeZone}</p>
             </div>
             <div className="mt-8">
-                <div className="font-mono font-bold text-5xl md:text-6xl text-swiss-accent tracking-tighter">
+                <div className="font-mono font-bold text-4xl lg:text-5xl text-swiss-accent tracking-tighter">
                     {timeString}
                 </div>
                 <div className="font-mono text-sm mt-2 text-gray-600">
@@ -43,7 +43,10 @@ const Clock = ({ city, timeZone }) => {
 };
 
 const WorldClockApp = () => {
+    const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    
     const clocks = [
+        { city: "Ваше время", timeZone: localTimeZone },
         { city: "Лондон", timeZone: "Europe/London" },
         { city: "Нью-Йорк", timeZone: "America/New_York" },
         { city: "Токио", timeZone: "Asia/Tokyo" },
