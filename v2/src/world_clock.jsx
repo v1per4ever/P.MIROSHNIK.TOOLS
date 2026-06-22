@@ -145,12 +145,12 @@ const WorldClockApp = () => {
 
     return (
         <div className="min-h-screen bg-swiss-app">
-            <nav className="swiss-nav border-b-2 border-black bg-white p-4">
-                <div className="flex items-center gap-4 max-w-7xl mx-auto">
-                    <a href="../index.html" className="font-black text-2xl tracking-tighter uppercase hover:text-swiss-accent transition-colors">
+            <nav className="swiss-border-b bg-white p-4 flex justify-between items-center sticky top-0 z-50">
+                <div className="flex items-center gap-4">
+                    <a href="../index.html" className="font-mono font-bold text-xl tracking-tighter hover:text-swiss-accent swiss-transition">
                         P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
                     </a>
-                    <span className="font-mono text-sm tracking-widest text-gray-500 uppercase">/ world-clock</span>
+                    <span className="font-mono text-sm text-gray-500 bg-swiss-light px-2 py-1 swiss-border">/ world-clock</span>
                 </div>
             </nav>
 
