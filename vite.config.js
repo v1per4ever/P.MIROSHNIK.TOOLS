@@ -15,7 +15,8 @@ export default defineConfig({
         ribbon: resolve(__dirname, 'my/linguistic_ribbon_editor.html'),
         barcode: resolve(__dirname, 'my/barcode_generator.html'),
         wb: resolve(__dirname, 'my/WB XLSX CSV Sanitizer.html'),
-        world_clock: resolve(__dirname, 'my/world_clock.html')
+        world_clock: resolve(__dirname, 'my/world_clock.html'),
+        ean13: resolve(__dirname, 'my/ean13_generator.html')
       }
     }
   }
