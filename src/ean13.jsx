@@ -190,7 +190,8 @@ import { createRoot } from 'react-dom/client';
                     // Generate barcode to base64 canvas
                     const canvas = document.createElement('canvas');
                     try {
-                        JsBarcode(canvas, barcode_value, {
+                        const safe_barcode = barcode_value.substring(0, 12);
+                        JsBarcode(canvas, safe_barcode, {
                             format: "EAN13",
                             displayValue: true,
                             font: 'Space Mono',
