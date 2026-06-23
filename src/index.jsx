@@ -132,7 +132,7 @@ import { createRoot } from 'react-dom/client';
                     link: "./my/chroma_color_tools.html"
                 },
                 {
-                    title: "Генератор штрих-кодов",
+                    title: "Генератор Code128",
                     content: "Браузерная утилита для массовой генерации PDF-этикеток Code128 из CSV-файлов. Вся обработка на стороне клиента без использования серверов.",
                     link: "./my/barcode_generator.html"
                 },
