@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: 'OCR B Std Regular';
-    src: url('/fonts/OCR B Std Regular.otf') format('opentype');
-}
-
 @theme {
   --color-swiss-black: #0A0A0A;
   --color-swiss-white: #FFFFFF;

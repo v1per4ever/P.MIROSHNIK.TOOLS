@@ -193,7 +193,7 @@ import { createRoot } from 'react-dom/client';
                         JsBarcode(canvas, barcode_value, {
                             format: "EAN13",
                             displayValue: true,
-                            font: 'OCR B Std Regular',
+                            font: 'Space Mono',
                             fontSize: config.font_size_barcode * 3, // scale up for canvas
                             textMargin: 0,
                             width: 6, // Увеличиваем плотность пикселей по ширине
