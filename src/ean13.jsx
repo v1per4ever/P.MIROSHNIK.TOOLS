@@ -135,10 +135,7 @@ import { createRoot } from 'react-dom/client';
 
             const generatePreview = async () => {
                 const mockRow = {
-                    'Артикул продавца': 'ART-TEST',
-                    'Артикул WB': '12345678',
-                    'Баркоды': '4607123412345',
-                    'Наименование': 'Пример названия тестового товара для проверки переносов'
+                    'Баркоды': '4607123412345'
                 };
                 const pdfObj = await generatePDF(mockRow);
                 if (pdfObj) {
@@ -160,7 +157,6 @@ import { createRoot } from 'react-dom/client';
                 setIsGenerating(true);
                 setStatus('Генерация одиночного штрих-кода...');
                 const mockRow = {
-                    'Артикул продавца': `SINGLE-${singleBarcode}`,
                     'Баркоды': singleBarcode
                 };
                 const pdfObj = await generatePDF(mockRow);
@@ -238,7 +234,7 @@ import { createRoot } from 'react-dom/client';
             };
 
             const downloadTemplate = () => {
-                const csvContent = "\uFEFFАртикул продавца,Артикул WB,Баркоды,Наименование\nART-TEST,12345678,4607123412345,Пример названия товара\n";
+                const csvContent = "\uFEFFБаркоды\n4607123412345\n";
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8-sig;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -252,10 +248,7 @@ import { createRoot } from 'react-dom/client';
 
             const downloadPreview = async () => {
                 const mockRow = {
-                    'Артикул продавца': 'ART-TEST',
-                    'Артикул WB': '12345678',
-                    'Баркоды': '4607123412345',
-                    'Наименование': 'Пример названия тестового товара для проверки переносов'
+                    'Баркоды': '4607123412345'
                 };
                 const pdfObj = await generatePDF(mockRow);
                 if (pdfObj) {
