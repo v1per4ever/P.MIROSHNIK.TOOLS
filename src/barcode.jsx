@@ -326,7 +326,7 @@ import { createRoot } from 'react-dom/client';
                         </div>
                         
                         <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4 leading-none">
-                            Barcode <span className="text-swiss-accent">Generator</span>.
+                            Code128 <span className="text-swiss-accent">Generator</span>.
                         </h1>
                         <p className="font-mono text-gray-600 mb-12 max-w-2xl leading-relaxed">
                             Массовая генерация PDF-этикеток Code128 на основе CSV. Вся обработка происходит прямо в вашем браузере — никаких серверов, максимальная безопасность.

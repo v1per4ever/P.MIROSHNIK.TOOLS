@@ -49,6 +49,7 @@ import { createRoot } from 'react-dom/client';
                 spacing_text_mm: 5
             });
             const [previewUrl, setPreviewUrl] = useState(null);
+            const [singleBarcode, setSingleBarcode] = useState('');
 
             const fileInputRef = useRef(null);
 
@@ -86,11 +87,7 @@ import { createRoot } from 'react-dom/client';
 
             const handleConfigChange = (e) => {
                 const { name, value } = e.target;
-                if (name === 'font_family_barcode') {
-                    setConfig(prev => ({ ...prev, [name]: value }));
-                } else {
-                    setConfig(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
-                }
+                setConfig(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
             };
 
             const wrapText = (doc, text, maxWidth, fontSize) => {
@@ -196,7 +193,7 @@ import { createRoot } from 'react-dom/client';
                         JsBarcode(canvas, barcode_value, {
                             format: "EAN13",
                             displayValue: true,
-                            font: config.font_family_barcode,
+                            font: 'OCR B Std Regular',
                             fontSize: config.font_size_barcode * 3, // scale up for canvas
                             textMargin: 0,
                             width: 6, // Увеличиваем плотность пикселей по ширине
@@ -238,6 +235,35 @@ import { createRoot } from 'react-dom/client';
             useEffect(() => {
                 generatePreview();
             }, [config]);
+
+            const generateSingle = async () => {
+                if (!singleBarcode || !/^\d{12,13}$/.test(singleBarcode)) {
+                    alert('Введите корректный EAN-13 (12 или 13 цифр)');
+                    return;
+                }
+                setIsGenerating(true);
+                setStatus('Генерация одиночного штрих-кода...');
+                const mockRow = {
+                    'Артикул продавца': `SINGLE-${singleBarcode}`,
+                    'Баркоды': singleBarcode
+                };
+                const pdfObj = await generatePDF(mockRow);
+                if (pdfObj) {
+                    const blob = new Blob([pdfObj.data], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `barcode_${singleBarcode}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    setStatus('Готово! Одиночный штрих-код скачан.');
+                } else {
+                    setStatus('Ошибка генерации одиночного штрих-кода.');
+                }
+                setIsGenerating(false);
+            };
 
             const startGeneration = () => {
                 if (!file) return;
@@ -357,6 +383,20 @@ import { createRoot } from 'react-dom/client';
                                 </div>
                                 
                                 <div className="flex flex-col justify-center">
+                                    <div className="font-mono text-sm font-bold uppercase mb-4 border-b border-swiss-black pb-2">Создать один штрих-код</div>
+                                    <div className="flex gap-2 mb-6">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Введите 13 цифр..." 
+                                            value={singleBarcode} 
+                                            onChange={(e) => setSingleBarcode(e.target.value)}
+                                            className="flex-1 border border-swiss-black px-3 py-2 font-mono text-sm focus:outline-none focus:border-swiss-accent"
+                                        />
+                                        <SwissButton variant="primary" onClick={generateSingle} disabled={isGenerating || !singleBarcode} className="!px-4 !py-2 whitespace-nowrap">
+                                            Скачать PDF
+                                        </SwissButton>
+                                    </div>
+
                                     <div className="font-mono text-sm font-bold uppercase mb-4 border-b border-swiss-black pb-2">Статус операции</div>
                                     <div className="font-mono text-sm text-gray-600 mb-4">{status}</div>
                                     
@@ -372,7 +412,6 @@ import { createRoot } from 'react-dom/client';
                                     { label: 'Ширина (мм)', name: 'width_mm' },
                                     { label: 'Высота (мм)', name: 'height_mm' },
                                     { label: 'Размер шрифта Баркода', name: 'font_size_barcode' },
-                                    { label: 'Шрифт цифр штрих-кода', name: 'font_family_barcode', type: 'text' },
                                     { label: 'Высота Баркода', name: 'barcode_height_mm' }
                                 ].map((item, i) => (
                                     <div key={i}>
