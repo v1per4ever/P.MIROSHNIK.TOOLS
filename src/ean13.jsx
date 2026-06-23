@@ -37,14 +37,14 @@ import { createRoot } from 'react-dom/client';
             const [progress, setProgress] = useState(0);
             const [status, setStatus] = useState('Ожидание файла...');
             const [config, setConfig] = useState({
-                width_mm: 54,
-                height_mm: 34,
-                font_size_barcode: 8,
+                width_mm: 50,
+                height_mm: 30,
+                font_size_barcode: 20,
                 font_family_barcode: 'monospace',
                 font_size_name: 6,
                 font_size_wb: 9,
                 font_size_seller: 7,
-                barcode_height_mm: 5,
+                barcode_height_mm: 20,
                 margin_top_mm: 3,
                 spacing_text_mm: 5
             });
