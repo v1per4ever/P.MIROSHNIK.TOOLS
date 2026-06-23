@@ -142,6 +142,11 @@ import { createRoot } from 'react-dom/client';
                     link: "./my/patoline.html"
                 },
                 {
+                    title: "Генератор EAN-13",
+                    content: "Браузерная утилита для генерации PDF-этикеток в формате EAN-13 из CSV-файлов.",
+                    link: "./my/ean13_generator.html"
+                },
+                {
                     title: "GenArt Shape Generator",
                     content: "Утилита для генерации ASCII-подобного паттерна из изображений. Поддерживает символы, иконки, геометрические фигуры.",
                     link: "./my/gen_shape.html"

@@ -4,20 +4,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chroma.js Color Tool | P.MIROSHNIK.TOOLS</title>
+    <title>Генератор EAN-13 | P.MIROSHNIK.TOOLS</title>
     
-                
-            
-            
-    <!-- Chroma.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
+    <!-- Libraries for Barcode & PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    
     <style>
         body { background-color: #F5F5F5; color: #0A0A0A; font-family: 'Inter', sans-serif; }
         /* Swiss Design Utility Classes */
@@ -31,24 +30,12 @@
         .swiss-transition { transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
         
         .bg-swiss-light { background-color: #F4F4F5; }
-
-        /* Grid system border hacks */
-        .swiss-grid-container { background-color: #0A0A0A; gap: 1px; }
-        .swiss-grid-item { background-color: #FFFFFF; }
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: none;
-            width: 32px;
-            height: 32px;
-        }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: 1px solid #0A0A0A; }
     </style>
     <link rel="stylesheet" href="/src/index.css" />
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="module" src="/src/chroma.jsx"></script>
+    <script type="module" src="/src/ean13.jsx"></script>
 </body>
 </html>

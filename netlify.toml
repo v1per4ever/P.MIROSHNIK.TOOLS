@@ -1,4 +1,0 @@
-[build]
-  base = "v2"
-  publish = "dist"
-  command = "rm -rf node_modules/.vite node_modules/.cache && npm run build"
