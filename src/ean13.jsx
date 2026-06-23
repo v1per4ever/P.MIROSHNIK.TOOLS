@@ -53,31 +53,6 @@ import { createRoot } from 'react-dom/client';
 
             const fileInputRef = useRef(null);
 
-            // Font cache for jsPDF
-            const fontBase64Ref = useRef(null);
-
-            const getFontBase64 = async () => {
-                if (fontBase64Ref.current) return fontBase64Ref.current;
-                
-                try {
-                    // Fetch Roboto font from CDN which supports Cyrillic
-                    const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
-                    const response = await fetch(fontUrl);
-                    const buffer = await response.arrayBuffer();
-                    const bytes = new Uint8Array(buffer);
-                    let binary = '';
-                    for (let i = 0; i < bytes.byteLength; i++) {
-                        binary += String.fromCharCode(bytes[i]);
-                    }
-                    const base64 = window.btoa(binary);
-                    fontBase64Ref.current = base64;
-                    return base64;
-                } catch (e) {
-                    console.error("Error fetching font", e);
-                    return null;
-                }
-            };
-
             const handleFileChange = (e) => {
                 if (e.target.files.length > 0) {
                     setFile(e.target.files[0]);
@@ -99,16 +74,14 @@ import { createRoot } from 'react-dom/client';
             const generatePDF = (row) => {
                 return new Promise(async (resolve) => {
                     const article_seller = (row['Артикул продавца'] || '').trim();
-                    const article_wb = (row['Артикул WB'] || '').trim();
                     const barcode_value = (row['Баркоды'] || '').trim();
                     if (barcode_value && !/^\d{12,13}$/.test(barcode_value)) {
                         console.error("Invalid EAN-13 code:", barcode_value);
                         resolve(null);
                         return;
                     }
-                    const name = (row['Наименование'] || '').trim();
 
-                    if (!article_seller || !barcode_value) {
+                    if (!barcode_value) {
                         resolve(null);
                         return;
                     }
@@ -120,72 +93,14 @@ import { createRoot } from 'react-dom/client';
                         format: isLandscape ? [config.width_mm, config.height_mm] : [config.height_mm, config.width_mm]
                     });
 
-                    // Load custom font for Cyrillic support
-                    const fontBase64 = await getFontBase64();
-                    if (fontBase64) {
-                        doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
-                        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-                        doc.setFont('Roboto', 'normal');
-                    } else {
-                        doc.setFont('helvetica', 'bold'); // Fallback
-                    }
-
                     const width = config.width_mm;
                     const height = config.height_mm;
-                    const maxTextWidth = width * 0.9;
-                    let currentY = config.margin_top_mm;
 
-                    const drawTextTopDown = (text, defaultFontSize) => {
-                        if (!text) return;
-                        let fontSize = defaultFontSize;
-                        doc.setFontSize(fontSize);
-                        while (doc.getTextWidth(text) > maxTextWidth && fontSize > 0.5) {
-                            fontSize -= 0.5;
-                            doc.setFontSize(fontSize);
-                        }
-                        currentY += (fontSize * 0.3527);
-                        doc.text(text, width / 2, currentY, { align: 'center' });
-                        currentY += (config.spacing_text_mm / 2);
-                    };
-
-                    const drawMultilineTopDown = (text, defaultFontSize) => {
-                        if (!text) return;
-                        let fontSize = defaultFontSize;
-                        doc.setFontSize(fontSize);
-                        let lines = doc.splitTextToSize(text, maxTextWidth);
-                        
-                        let maxLineWidth = Math.max(...lines.map(l => doc.getTextWidth(l)));
-                        while (maxLineWidth > maxTextWidth && fontSize > 0.5) {
-                            fontSize -= 0.5;
-                            doc.setFontSize(fontSize);
-                            lines = doc.splitTextToSize(text, maxTextWidth);
-                            maxLineWidth = Math.max(...lines.map(l => doc.getTextWidth(l)));
-                        }
-                        
-                        lines.forEach(line => {
-                            currentY += (fontSize * 0.3527);
-                            doc.text(line, width / 2, currentY, { align: 'center' });
-                            currentY += 0.5;
-                        });
-                        currentY += (config.spacing_text_mm / 2) - 0.5;
-                    };
-
-                    // Draw Text Top-Down
-                    if (article_seller) {
-                        drawTextTopDown(`Артикул продавца: ${article_seller}`, config.font_size_seller);
-                    }
-                    if (article_wb) {
-                        drawTextTopDown(`Артикул WB: ${article_wb}`, config.font_size_wb);
-                    }
-                    if (name) {
-                        drawMultilineTopDown(name, config.font_size_name);
-                    }
-                    
-
-                    // Draw Barcode Image below the text
+                    // Draw Barcode Image centered
                     const bcWidth = width * 0.9;
                     const bcHeight = config.barcode_height_mm;
                     const x = (width - bcWidth) / 2;
+                    const y = (height - bcHeight) / 2;
                     
                     // Generate barcode to base64 canvas
                     const canvas = document.createElement('canvas');
@@ -203,7 +118,7 @@ import { createRoot } from 'react-dom/client';
                         });
                         
                         const barcodeImgData = canvas.toDataURL("image/png");
-                        doc.addImage(barcodeImgData, 'PNG', x, currentY, bcWidth, bcHeight);
+                        doc.addImage(barcodeImgData, 'PNG', x, y, bcWidth, bcHeight);
 
                         const pdfOutput = doc.output('arraybuffer');
                         
