@@ -202,8 +202,9 @@ import { createRoot } from 'react-dom/client';
             <footer className="bg-swiss-black text-swiss-white px-4 py-12 md:py-24">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 gap-12 border-b border-gray-800 pb-12">
                     <div>
-                        <div className="font-black text-4xl md:text-5xl tracking-tighter uppercase leading-none mb-4">
-                            P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
+                        <div className="font-black text-4xl md:text-5xl tracking-tighter uppercase leading-none mb-4 flex items-center gap-4">
+                            <img src="./logo.svg" alt="Logo" className="h-10 md:h-12" />
+                            <span>P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span></span>
                         </div>
                         <p className="font-mono text-sm text-gray-500 max-w-xs mb-6">Собственная экосистема рабочих инструментов.</p>
                         <p className="font-mono text-xs text-gray-500">
@@ -324,8 +325,9 @@ import { createRoot } from 'react-dom/client';
                 <div className="antialiased flex flex-col min-h-screen">
                     <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-swiss-white border-b border-swiss-black py-4' : 'bg-transparent py-6'}`}>
                         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-                            <div className="font-black text-2xl tracking-tighter uppercase text-swiss-black">
-                                P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
+                            <div className="font-black text-2xl tracking-tighter uppercase text-swiss-black flex items-center gap-3">
+                                <img src="./logo.svg" alt="Logo" className="h-8" />
+                                <span>P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span></span>
                             </div>
                         </div>
                     </nav>

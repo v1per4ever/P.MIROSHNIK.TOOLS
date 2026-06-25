@@ -6,8 +6,9 @@ import { createRoot } from 'react-dom/client';
         const NavHeader = () => (
             <nav className="swiss-border-b bg-white p-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <a href="../index.html" className="font-mono font-bold text-xl tracking-tighter hover:text-swiss-accent swiss-transition">
-                        P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span>
+                    <a href="../index.html" className="font-mono font-bold text-xl tracking-tighter hover:text-swiss-accent swiss-transition flex items-center gap-2">
+                        <img src="../logo.svg" alt="Logo" className="h-6" />
+                        <span>P.MIROSHNIK<span className="text-swiss-accent">.TOOLS</span></span>
                     </a>
                     <span className="font-mono text-sm text-gray-500 bg-swiss-light px-2 py-1 swiss-border">/ chroma-color-tools</span>
                 </div>
