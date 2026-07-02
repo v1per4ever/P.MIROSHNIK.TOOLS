@@ -1,16 +1,37 @@
-# React + Vite
+<div align="center">
+  <img src="banner.jpg" alt="P.MIROSHNIK.TOOLS Catalog" width="100%">
+  
+  <h1>🛠️ P.MIROSHNIK.TOOLS</h1>
+  <p><b>Тщательно отобранная коллекция инструментов и скриптов для автоматизации дизайна.</b></p>
+  
+  <p>
+    <a href="#каталог-инструментов">Каталог</a> •
+    <a href="#установка">Установка</a> •
+    <a href="#лицензия">Лицензия</a>
+  </p>
+</div>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+## 🗂 Каталог инструментов
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Добро пожаловать в репозиторий `P.MIROSHNIK.TOOLS`. Здесь собраны различные скрипты и утилиты, предназначенные для ускорения и автоматизации рутинных задач в графическом дизайне и допечатной подготовке (Adobe Photoshop, Illustrator и др.).
 
-## React Compiler
+| Инструмент | Описание | Статус |
+|:---|:---|:---:|
+| **[AddSpotWhite](https://github.com/v1per4ever/AddSpotWhite)** | Автоматическая генерация каналов Spot White для печати | Активен |
+| **[Print-Prep-Orchestrator](https://github.com/v1per4ever/Print-Prep-Orchestrator)** | Пакетный экспорт и префлайт в Illustrator | Активен |
+| **[ps-bulk-mockups-filler](https://github.com/v1per4ever/ps-bulk-mockups-filler)** | Массовое заполнение мокапов в Photoshop | Активен |
+| **[barcode-pdf-generator](https://github.com/v1per4ever/barcode-pdf-generator)** | Генерация штрихкодов в PDF (Python) | Активен |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+> 🚀 **Новые инструменты регулярно добавляются!** Следите за обновлениями профиля.
 
-## Expanding the ESLint configuration
+## 💻 Установка
+Каждый скрипт или программа из коллекции имеет свои специфические требования. Для большинства скриптов Adobe (.jsx) достаточно поместить их в папку:
+- **Windows:** `C:\Program Files\Adobe\Adobe [Программа] [Версия]\Presets\Scripts\`
+- **macOS:** `/Applications/Adobe [Программа] [Версия]/Presets/Scripts/`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Подробные инструкции смотрите в соответствующих репозиториях.
+
+## 📄 Лицензия
+Инструменты предоставляются "как есть". Вы можете использовать их для личных и коммерческих проектов, чтобы сделать свою работу эффективнее и проще!
